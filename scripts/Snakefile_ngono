@@ -1,0 +1,33 @@
+#### modify config files with sample sheets ####
+
+configfile: "phet.yaml"
+
+#### target rules ####
+
+if config["gonorrhoeae"]:
+          rule all:
+                 input:
+                     "ngmaster.csv",
+                     "ngstar.txt"
+
+if config["gonorrhoeae"]:
+          rule ngmaster:
+                       input:
+                             expand("filtered_contigs/{sample}.fna", sample=config["gonorrhoeae"])
+                       output:
+                             "ngmaster.csv"
+                       conda:
+                             "phetype"
+                       shell:
+                             "ngmaster --csv {input} > {output}"
+
+if config["gonorrhoeae"]:
+          rule pyngSTar:
+                        input:
+                              expand("filtered_contigs/{sample}.fna", sample=config["gonorrhoeae"])
+                        output:
+                             "ngstar.txt"
+                        conda:
+                             "phetype"
+                        shell:
+                             "python /phe/tools/pyngSTar/pyngSTar.py -i {input} -o {output} -p /phe/tools/pyngSTar/pyngSTarDB_100522/"

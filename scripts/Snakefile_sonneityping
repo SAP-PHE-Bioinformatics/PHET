@@ -1,0 +1,57 @@
+###config file###
+
+configfile: "phet.yaml"
+
+import pandas as pd
+import pathlib as pb 
+import subprocess as sp 
+
+
+##target rules###
+
+if config["shigella"]:
+      rule all:
+        input:
+             expand("mykrobe_sonneityping/{sample}.json", sample=config["shigella"]),
+             "mykrobe_parsed_predictResults.tsv"
+            
+
+
+
+###MYKROBE SONNEITYPER
+
+if config["shigella"]:
+      rule sonneityping:
+            input:
+                 R1 = "input/{sample}_R1.fastq.gz",
+                 R2 = "input/{sample}_R2.fastq.gz"
+            output: 
+                 "mykrobe_sonneityping/{sample}.json"
+            conda:
+                 "pheamr"
+            params:
+                  name = "{sample}"
+            shell:
+                 """
+                 for i in {input}
+                 do
+                    mykrobe predict --sample {params.name} --species sonnei --format json --out {output} --seq {input.R1} {input.R2}
+                 done
+                 """
+          
+
+### Parsing all mykrobe sonneityper json output files into a summary tsv
+
+
+if config["shigella"]:
+      rule parse_mykrobe:
+            input:
+                 expand("mykrobe_sonneityping/{sample}.json", sample=config["shigella"])
+            params:
+                 filename = "mykrobe_parsed"
+            output:
+                 "mykrobe_parsed_predictResults.tsv"
+            shell:
+                 "python /phe/tools/sonneityping/parse_mykrobe_predict.py --jsons {input} --alleles /phe/tools/sonneityping/alleles.txt --prefix {params.filename}"
+
+

@@ -1,0 +1,99 @@
+configfile: "phet.yaml"
+
+# target rules #
+if config["spneumoniae"]:
+      rule all: 
+           input: 
+                 expand("sp_{sample}/pred.tsv", sample=config["spneumoniae"]),
+                 expand("sp_{sample}/serocall_counts.txt", sample=config["spneumoniae"]), 
+                 expand("sp_{sample}/serocall_calls.txt", sample=config["spneumoniae"]),
+                 "Summary_Seroba.tsv",
+                 "Summary_Serocall.tsv"
+
+
+# SeroBA
+
+if config["spneumoniae"]:
+      rule seroba:
+             input:
+                 r1 = "input/{sample}_R1.fastq.gz",
+                 r2 = "input/{sample}_R2.fastq.gz"
+             output:
+                 out = "sp_{sample}/pred.tsv"
+             resources:
+                 mem_mb=50000
+             params:
+                 name = "sp_{sample}"
+             conda:
+                 "seroba"
+             shell:
+                 """
+                 rm -r {params.name}
+                 seroba runSerotyping /phe/tools/seroba/database {input.r1} {input.r2} {params.name}
+                 """
+
+#SeroCall
+
+if config["spneumoniae"]:
+      rule SeroCall:
+               input:
+                  r1 = "input/{sample}_R1.fastq.gz",  
+                  r2 = "input/{sample}_R2.fastq.gz",
+                  out = rules.seroba.output
+               output:
+                  counts = "sp_{sample}/serocall_counts.txt",
+                  calls = "sp_{sample}/serocall_calls.txt"
+               params:
+                  name = "sp_{sample}/serocall"
+               conda:
+                  "serocall"
+               shell:
+                  "/phe/tools/SeroCall/serocall -t 16 -o {params.name} {input.r1} {input.r2}"
+
+# SeroBA Summary
+if config["spneumoniae"]:
+      rule seroba_sum:
+              input:
+                    expand(rules.seroba.output, sample=config["spneumoniae"])
+              output:
+                    "Summary_Seroba.tsv"
+              conda:
+                    "seroba"
+              shell:
+                    """
+                    seroba summary .
+                    mv summary.tsv Summary_Seroba.tsv
+                    """
+
+#SeroCall Summary
+
+if config["spneumoniae"]:
+      rule serocall_sum:
+            input:
+                 expand(rules.SeroCall.output.calls, sample=config["spneumoniae"]),
+            output:
+                 "Summary_Serocall.tsv"
+            run:
+                 import pandas as pd
+                 import pathlib as pb
+                 import subprocess as sp
+                 spfiles = f"{input}".split()
+                 summary_table = pd.DataFrame()
+                 for file in spfiles:
+                     serocall = pb.Path(file)
+                     df = pd.read_csv(serocall, sep = '\s+', header = None, names = ['Serotype', 'Percentage'])
+                     df = df.iloc[7:]
+                     df['Percentage'] = df['Percentage'].apply(lambda x:float(x.strip('%')) if isinstance(x, str) == True else float(x))
+                     tempdf = pd.DataFrame()
+                     sum_df = {'ACCESSION' : f"{serocall.parts[0]}", 'SEROTYPE' : df.iloc[0,0],
+                              'PERCENTAGE' : df.iloc[0,1]
+                              }
+                     tempdf = pd.DataFrame(data = sum_df, index = [0])
+                     if summary_table.empty:
+                           summary_table = tempdf
+                     else:
+                          summary_table = summary_table.append(tempdf, sort = True)
+                 cols = ['ACCESSION', 'SEROTYPE', 'PERCENTAGE']
+                 summary_table = summary_table.reindex(cols, axis = 'columns')
+                 summary_table.to_csv(f"{output}", sep = "\t", index =  False)
+               

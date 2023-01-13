@@ -1,0 +1,24 @@
+#### modify config files with sample sheets ####
+
+configfile: "phet.yaml"
+
+#### target rules ####
+
+if config["salmonella"]:
+     rule all:
+         input:
+              "sistr.csv",
+              "sistr_cgmlst.csv"
+
+
+if config["salmonella"]:
+     rule sistr:
+              input:
+                   expand("filtered_contigs/{sample}.fna", sample=config["salmonella"])
+              output:
+                   all = "sistr.csv",
+                   cgmlst = "sistr_cgmlst.csv"
+              conda:
+                   "phetype"
+              shell:
+                   "sistr --qc --cgmlst-profiles {output.cgmlst} -f csv -o {output.all} {input}"

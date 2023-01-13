@@ -1,0 +1,16 @@
+configfile : "phet.yaml"
+
+
+if config["ecoli"]:
+          rule ectyper:
+                  input:
+                       "filtered_contigs/"
+                  output:
+                       directory("ECTyper")
+                  conda:
+                       "phetype"
+                  shell:
+                       "ectyper -i {input} -o {output}" 
+             
+
+

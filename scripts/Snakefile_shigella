@@ -1,0 +1,128 @@
+###config file###
+
+configfile: "phet.yaml"
+
+import pandas as pd
+import pathlib as pb 
+import subprocess as sp 
+
+
+##target rules###
+
+if config["shigella"]:
+      rule all:
+        input:
+             expand("{sample}.tsv", sample=config["shigella"]),
+             expand("{sample}-hits.tsv", sample=config["shigella"]),
+             directory("Shigatyper/"),
+             "Summary_Shigatyper.tsv",
+             expand("ShigeiFinder/{sample}.tsv", sample=config["shigella"]),
+             "Summary_ShigeiFinder.tsv"
+
+### SHIGATYPER ###           
+
+if config["shigella"]:
+      rule shigatyper:
+            input: 
+                  R1 = "input/{sample}_R1.fastq.gz",
+                  R2 = "input/{sample}_R2.fastq.gz"
+            output: 
+                  "{sample}.tsv",
+                  "{sample}-hits.tsv"
+            conda:
+                 "shigatyper"
+            shell:
+                 """
+                 shigatyper --R1 {input.R1} --R2 {input.R2}
+                 """
+
+### Parsing all individual reports into a summary file ##
+
+if config["shigella"]:
+      rule shigatyper_sum:
+            input:
+                 files = expand("{sample}.tsv", sample=config["shigella"])
+            output:
+                 "Summary_Shigatyper.tsv"
+            run:
+                shfiles = f"{input.files}".split()
+                summary_table = pd.DataFrame()
+                for file in shfiles:
+                    shigatyper = pb.Path(file)
+                    df = pd.read_csv(shigatyper, sep = '\t', header = None, names = ['sample', 'prediction', 'ipaB', 'notes'])
+                    df = df.iloc[1:]
+                    tempdf = pd.DataFrame()
+                    sum_df = {'Sample' : df.iloc[0,0], 'Prediction' : df.iloc[0,1], 'ipaB' : df.iloc[0,2], 'Notes' : df.iloc[0,3]
+                    }
+                    tempdf = pd.DataFrame(data = sum_df, index = [0])
+                    if summary_table.empty:
+                        summary_table = tempdf
+                    else:
+                        summary_table = summary_table.append(tempdf, sort = True)
+                cols = ['Sample', 'Prediction', 'ipaB', 'Notes']
+                summary_table = summary_table.reindex(cols, axis = 'columns')
+                summary_table.to_csv(f"{output}", sep = "\t", index = False)
+
+
+#### moving all tsv outputs by Shigatyper from working directory into Shigatyper folder ##
+
+if config["shigella"]:
+      rule move_tsv:
+            input:
+                 out = expand(rules.shigatyper.output, sample=config["shigella"]),
+                 sum = rules.shigatyper_sum.output
+            output:
+                 directory("Shigatyper/")
+            params:
+                 outdir = "Shigatyper/"
+            shell:
+                  """
+                  mkdir {params.outdir}
+                  mv {input.out} {params.outdir}
+                  """
+
+
+
+
+### ShigeiFinder
+
+if config["shigella"]:
+      rule ShigeiFinder:
+            input:
+                 R1 = "input/{sample}_R1.fastq.gz",
+                 R2 = "input/{sample}_R2.fastq.gz"
+            output:
+                 "ShigeiFinder/{sample}.tsv"
+            conda:
+                 "shigeifinder"
+            shell:
+                 "shigeifinder -r -i {input.R1} {input.R2} --output {output} -t 16"
+
+
+#### Creating summary file from output files of ShigeiFinder
+
+if config["shigella"]:
+      rule ShigieFinder_sum:
+            input:
+                 files = expand("ShigeiFinder/{sample}.tsv", sample=config["shigella"])
+            output:
+                 "Summary_ShigeiFinder.tsv"
+            run:
+                 sfiles = f"{input.files}".split()
+                 summary_table = pd.DataFrame()
+                 for file in sfiles:
+                       shigeifinder = pb.Path(file)
+                       df = pd.read_csv(shigeifinder, sep = '\t', header = None, names = ['#SAMPLE', 'ipaH', 'VIRULENCE', 'CLUSTER', 'SEROTYPE', 'O_ANTIGEN', 'H_ANTIGEN', 'NOTES'])
+                       df = df.iloc[1:]
+                       tempdf = pd.DataFrame()
+                       sum_df = {'SAMPLE ID' : df.iloc[0,0], 'ipaH' : df.iloc[0,1], 'VIRULENCE' : df.iloc[0,2], 'CLUSTER' : df.iloc[0,3],
+                      'SEROTYPE' : df.iloc[0,4], 'O_ANTIGEN' : df.iloc[0,5], 'H_ANTIGEN' : df.iloc[0,6], 'NOTES' : df.iloc[0,7]
+                       }
+                       tempdf = pd.DataFrame(data = sum_df, index = [0])
+                       if summary_table.empty:
+                              summary_table = tempdf
+                       else:
+                            summary_table = summary_table.append(tempdf, sort = True)
+                 cols = ['SAMPLE ID', 'ipaH', 'VIRULENCE', 'CLUSTER', 'SEROTYPE', 'O_ANTIGEN', 'H_ANTIGEN', 'NOTES']
+                 summary_table = summary_table.reindex(cols, axis = 'columns')
+                 summary_table.to_csv(f"{output}", sep = "\t", index = False)

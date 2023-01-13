@@ -1,0 +1,14 @@
+configfile: "phet.yaml"
+
+#target rules#
+
+if config["meningitidis"]:
+      rule meningotype:
+            input:
+                  expand("filtered_contigs/{sample}.fna", sample=config["meningitidis"])
+            output:
+                  "meningotype.txt"
+            conda:
+                  "phetype"
+            shell:
+                  "meningotype --bast --finetype --porB {input} > {output}"

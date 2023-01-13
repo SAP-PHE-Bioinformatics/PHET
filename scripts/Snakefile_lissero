@@ -1,0 +1,15 @@
+configfile: "phet.yaml"
+
+# target rules #
+
+
+if config["listeria"]:
+     rule lissero:
+        input:
+             expand("filtered_contigs/{sample}.fna", sample=config["listeria"])
+        output: 
+             "lissero.txt"
+        conda:
+             "phetype"
+        shell:
+             "lissero {input} > {output}" 
