@@ -14,10 +14,10 @@ if config["shigella"]:
         input:
              expand("{sample}.tsv", sample=config["shigella"]),
              expand("{sample}-hits.tsv", sample=config["shigella"]),
-             directory("Shigatyper/"),
-             "Summary_Shigatyper.tsv",
-             expand("ShigeiFinder/{sample}.tsv", sample=config["shigella"]),
-             "Summary_ShigeiFinder.tsv"
+             directory("PHET/Shigella/Shigatyper/"),
+             "PHET/Shigella/Summary_Shigatyper.tsv",
+             expand("PHET/Shigella/ShigeiFinder/{sample}.tsv", sample=config["shigella"]),
+             "PHET/Shigella/Summary_ShigeiFinder.tsv"
 
 ### SHIGATYPER ###           
 
@@ -43,7 +43,7 @@ if config["shigella"]:
             input:
                  files = expand("{sample}.tsv", sample=config["shigella"])
             output:
-                 "Summary_Shigatyper.tsv"
+                 "PHET/Shigella/Summary_Shigatyper.tsv"
             run:
                 shfiles = f"{input.files}".split()
                 summary_table = pd.DataFrame()
@@ -72,9 +72,9 @@ if config["shigella"]:
                  out = expand(rules.shigatyper.output, sample=config["shigella"]),
                  sum = rules.shigatyper_sum.output
             output:
-                 directory("Shigatyper/")
+                 directory("PHET/Shigella/Shigatyper/")
             params:
-                 outdir = "Shigatyper/"
+                 outdir = "PHET/Shigella/Shigatyper/"
             shell:
                   """
                   mkdir {params.outdir}
@@ -92,7 +92,7 @@ if config["shigella"]:
                  R1 = "input/{sample}_R1.fastq.gz",
                  R2 = "input/{sample}_R2.fastq.gz"
             output:
-                 "ShigeiFinder/{sample}.tsv"
+                 "PHET/Shigella/ShigeiFinder/{sample}.tsv"
             conda:
                  "shigeifinder"
             shell:
@@ -104,9 +104,9 @@ if config["shigella"]:
 if config["shigella"]:
       rule ShigieFinder_sum:
             input:
-                 files = expand("ShigeiFinder/{sample}.tsv", sample=config["shigella"])
+                 files = expand("PHET/Shigella/ShigeiFinder/{sample}.tsv", sample=config["shigella"])
             output:
-                 "Summary_ShigeiFinder.tsv"
+                 "PHET/Shigella/Summary_ShigeiFinder.tsv"
             run:
                  sfiles = f"{input.files}".split()
                  summary_table = pd.DataFrame()
