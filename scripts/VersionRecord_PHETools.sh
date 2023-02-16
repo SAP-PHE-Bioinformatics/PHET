@@ -51,6 +51,14 @@ echo '               '
 echo '## ABRICATE DATABASE LIST AND LAST UPDATE DATE ##'
 abricate --list 
 
+echo '--------------------------------------------------------------------------------'
+
+conda activate amrfinder
+
+echo ' ## AMRFinderPlus ## '
+amrfinder --version
+
+
 echo '
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
                                                                                     '
@@ -73,8 +81,8 @@ echo '--------------------------------------------------------------------------
 
 echo '## PYNGSTAR database version/date for Neisseria gonorrhoeae' 
 
-lastupdtdate=$(stat -c %y /phe/tools/PHET/scripts/pyngSTar/pyngSTar.py | cut -d' ' -f1)
-pyngSTarDB=$( basename /phe/tools/PHET/scripts/pyngSTar/pyngSTarDB_100522/)
+lastupdtdate=$(stat -c %y /phe/tools/pyngSTar/pyngSTar.py | cut -d' ' -f1)
+pyngSTarDB=$( basename /phe/tools/pyngSTar/pyngSTarDB_100522/)
 
 echo Last modified date of pyngSTar script: $lastupdtdate
 echo current database: $pyngSTarDB
@@ -98,6 +106,16 @@ echo '--------------------------------------------------------------------------
 
 echo '## ECTYPER for Escherichia coli ##'
 ectyper --version 
+
+echo '--------------------------------------------------------------------------------'
+
+echo '## ClermonTyping for Escherichia genus ##'
+/phe/tools/ClermonTyping/clermonTyping.sh -v | head -n 1
+
+echo '--------------------------------------------------------------------------------'
+
+echo '## EmmTyper for Streptococcus pyogenes ##'
+emmtyper --version 
 
 echo '--------------------------------------------------------------------------------'
 
