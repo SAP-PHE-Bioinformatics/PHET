@@ -7,8 +7,8 @@ configfile: "phet.yaml"
 if config["salmonella"]:
      rule all:
          input:
-              "sistr.csv",
-              "sistr_cgmlst.csv"
+              "PHET/Salmonella/sistr.csv",
+              "PHET/Salmonella/sistr_cgmlst.csv"
 
 
 if config["salmonella"]:
@@ -16,8 +16,8 @@ if config["salmonella"]:
               input:
                    expand("filtered_contigs/{sample}.fna", sample=config["salmonella"])
               output:
-                   all = "sistr.csv",
-                   cgmlst = "sistr_cgmlst.csv"
+                   all = "PHET/Salmonella/sistr.csv",
+                   cgmlst = "PHET/Salmonella/sistr_cgmlst.csv"
               conda:
                    "phetype"
               shell:
