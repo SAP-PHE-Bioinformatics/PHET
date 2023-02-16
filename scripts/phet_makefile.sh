@@ -11,7 +11,11 @@ awk 'BEGIN {print "gonorrhoeae:"}; (FS="\t") {if($10 == "Neisseria gonorrhoeae" 
 
 awk 'BEGIN {print "spneumoniae:"}; (FS="\t") {if($0 ~/spneumoniae/ && $2 >= 800000 && $16 <= 500 ) print "- " $1 }' QC_summary.txt | sed 's,filtered_contigs/,,g' | cut -f 1 -d "." 
 
+awk 'BEGIN {print "spyogenes:"}; (FS="\t") {if($10 == "Streptococcus pyogenes" && $2 >= 800000 && $16 <= 500 ) print "- " $1 }' QC_summary.txt
+
 awk 'BEGIN {print "shigella:"}; (FS="\t") {if($10 ~/Shigella/ || $12 ~/Shigella/ && $2 >= 1000000 && $16 <= 500 ) print "- " $1  }' QC_summary.txt
+
+awk 'BEGIN {print "Ssonnei:"}; (FS="\t") {if($10 == "Shigella sonnei" || $12 == "Shigella sonnei" && $2 >= 1000000 && $16 <= 500 ) print "- " $1  }' QC_summary.txt
 
 awk 'BEGIN {print "ecoli:"}; (FS="\t") {if($10 == "Escherichia coli" && $2 >= 1000000 && $16 <= 500 ) print "- " $1 }' QC_summary.txt
 
