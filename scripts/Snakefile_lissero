@@ -8,7 +8,7 @@ if config["listeria"]:
         input:
              expand("filtered_contigs/{sample}.fna", sample=config["listeria"])
         output: 
-             "lissero.txt"
+             "PHET/Listeria_monocytogenes/lissero.txt"
         conda:
              "phetype"
         shell:

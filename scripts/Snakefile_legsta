@@ -3,15 +3,15 @@ configfile: "phet.yaml"
 if config["legionella"]:
       rule all:
            input:
-                 expand("legsta/{sample}.tsv", sample=config["legionella"]), 
-                 "Summary_Legsta.tsv"
+                 expand("PHET/Legionella_pneumophila/{sample}_legsta.tsv", sample=config["legionella"]), 
+                 "PHET/Legionella_pneumophila/Summary_Legsta.tsv"
 
 if config["legionella"]:
       rule legsta:
             input: 
                 "filtered_contigs/{sample}.fna"
             output:
-                "legsta/{sample}.tsv"
+                "PHET/Legionella_pneumophila/{sample}_legsta.tsv"
             conda:
                 "phetype"
             shell:
@@ -21,9 +21,9 @@ if config["legionella"]:
 if config["legionella"]:
       rule legsta_sum:
             input:
-                files = expand("legsta/{sample}.tsv", sample=config["legionella"])
+                files = expand("PHET/Legionella_pneumophila/{sample}_legsta.tsv", sample=config["legionella"])
             output:
-                "Summary_Legsta.tsv"
+                "PHET/Legionella_pneumophila/Summary_Legsta.tsv"
             run:
                 import pandas as pd
                 import pathlib as pb
@@ -34,7 +34,7 @@ if config["legionella"]:
                      df = pd.read_csv(legsta, sep = '\t')
                      df = df.iloc[0:]
                      tempdf = pd.DataFrame()
-                     sum_df = {'SAMPLE ID' : f"{legsta.parts[1]}", 'SBT' : df.iloc[0,1], 'flaA' : df.iloc[0,2], 'pilE' : df.iloc[0,3], 
+                     sum_df = {'SAMPLE ID' : f"{legsta.parts[2]}", 'SBT' : df.iloc[0,1], 'flaA' : df.iloc[0,2], 'pilE' : df.iloc[0,3], 
                      'asd' : df.iloc[0,4], 'mip' : df.iloc[0,5], 'mompS' : df.iloc[0,6], 'proA' : df.iloc[0,7], 'neuA' : df.iloc[0,8]
                      }
                      tempdf = pd.DataFrame(data = sum_df, index = [0])

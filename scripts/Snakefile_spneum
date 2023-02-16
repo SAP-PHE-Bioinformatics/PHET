@@ -8,7 +8,8 @@ if config["spneumoniae"]:
                  expand("sp_{sample}/serocall_counts.txt", sample=config["spneumoniae"]), 
                  expand("sp_{sample}/serocall_calls.txt", sample=config["spneumoniae"]),
                  "Summary_Seroba.tsv",
-                 "Summary_Serocall.tsv"
+                 "Summary_Serocall.tsv",
+                 directory("PHET/Streptococcus/S_pneumoniae/")
 
 
 # SeroBA
@@ -96,4 +97,23 @@ if config["spneumoniae"]:
                  cols = ['ACCESSION', 'SEROTYPE', 'PERCENTAGE']
                  summary_table = summary_table.reindex(cols, axis = 'columns')
                  summary_table.to_csv(f"{output}", sep = "\t", index =  False)
+
+
+if config["spneumoniae"]:
+      rule move_files:
+            input:
+                  seroba = expand(rules.seroba.output.out, sample=config["spneumoniae"]),
+                  serocall = expand(rules.SeroCall.output.calls, sample=config["spneumoniae"]),
+                  serobasum = rules.seroba_sum.output,
+                  serocall_sum = rules.serocall_sum.output
+            output:
+                  directory("PHET/Streptococcus/S_pneumoniae/")
+            params:
+                  outdir = "PHET/Streptococcus/S_pneumoniae/"
+            shell:
+                  """
+                  mkdir {params.outdir}
+                  mv sp_* {output}
+                  mv {input.serobasum} {input.serocall_sum} {output}
+                  """
                

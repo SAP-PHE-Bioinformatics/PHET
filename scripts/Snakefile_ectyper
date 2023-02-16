@@ -6,7 +6,7 @@ if config["ecoli"]:
                   input:
                        "filtered_contigs/"
                   output:
-                       directory("ECTyper")
+                       directory("PHET/Escherichia/ECTyper")
                   conda:
                        "phetype"
                   shell:

@@ -29,7 +29,7 @@ rule all:
         "species_identification.tab",
         "QC_summary.txt",
         "gene_summary.txt",
-        "phet.yaml"
+        "PHET/phet.yaml"
 
 
 rule fq:
@@ -257,7 +257,7 @@ rule phet_config:
        input:
              QC = "QC_summary.txt"
        output:
-             "phet.yaml"
+             "PHET/phet.yaml"
        shell:
              """
              /phe/tools/PHET/scripts/phet_makefile.sh {input.QC} >> {output}

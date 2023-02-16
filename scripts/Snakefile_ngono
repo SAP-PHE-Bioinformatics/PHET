@@ -7,15 +7,15 @@ configfile: "phet.yaml"
 if config["gonorrhoeae"]:
           rule all:
                  input:
-                     "ngmaster.csv",
-                     "ngstar.txt"
+                     "PHET/Neisseria/gonorrhoeae/ngmaster.csv",
+                     "PHET/Neisseria/gonorrhoeae/ngstar.txt"
 
 if config["gonorrhoeae"]:
           rule ngmaster:
                        input:
                              expand("filtered_contigs/{sample}.fna", sample=config["gonorrhoeae"])
                        output:
-                             "ngmaster.csv"
+                             "PHET/Neisseria/gonorrhoeae/ngmaster.csv"
                        conda:
                              "phetype"
                        shell:
@@ -26,7 +26,7 @@ if config["gonorrhoeae"]:
                         input:
                               expand("filtered_contigs/{sample}.fna", sample=config["gonorrhoeae"])
                         output:
-                             "ngstar.txt"
+                             "PHET/Neisseria/gonorrhoeae/ngstar.txt"
                         conda:
                              "phetype"
                         shell:
