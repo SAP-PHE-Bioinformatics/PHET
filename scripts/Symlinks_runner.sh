@@ -174,7 +174,7 @@ done
 
 
 ## Shigella sonnei
-awk '(FS="\t") {if($10 == "Shigella sonnei" || $12 "Shigella sonnei" && $2 >= 1000000 && $16 <= 500) print $1 } ' QC_summary.txt |
+awk '(FS="\t") {if($10 == "Shigella sonnei" || $12 == "Shigella sonnei" && $2 >= 1000000 && $16 <= 500) print $1 } ' QC_summary.txt |
 while read line; 
 do 
    ln -fs $dir/BaseCalls/$folder/"$line"_*R1_001.fastq.gz $input_Ssonn/"$line"_R1.fastq.gz 
@@ -188,80 +188,82 @@ done
 ### Waiting for SISTR output files to filter for Salmonella serovars for symlinks
 
 
-#until [[ -e /scratch/phesiqcal/$folder/sistr.csv ]] ## << original condition, modified below with a timer 10/01/2023 fhiakau
-#do
- #  sleep 300
-#done 
-
-### Until condition waiting for sistr.csv and a timer for 6 hours if sistr.csv is not created.
+### Until condition waiting for sistr.csv and a timer for 3 hours if sistr.csv is not created.
 
 # i for counter
 i=0
 #until condition with counter/timer
-until [[ -e /scratch/phesiqcal/$folder/sistr.csv ]]
+until [[ -e /scratch/phesiqcal/$folder/PHET/Salmonella/sistr.csv ]]
 do
    sleep 300
-   if [[ $i -eq 21600 ]]
+   if [[ $i -eq 10800 ]]
    then 
-      echo "$current_DateTime -- $folder - waited for sistr.csv for 6 hours ($i secs), no sistr.csv found" >> /scratch/phesiqcal/$folder/Symlinks_logs_$folder.txt
+      echo "$current_DateTime -- $folder - waited for sistr.csv for 3 hours ($i secs), no sistr.csv found" >> /scratch/phesiqcal/$folder/Symlinks_logs_$folder.txt
       break
    fi
    ((i++))
 done 
 
+cd /scratch/phesiqcal/$folder/PHET/Salmonella/
+
 (
-### Salmonella enteritidis
-awk -vFPAT='([^,]*)|("[^"]+")' -vOFS=, '{IGNORECASE=1; if($15 ~/Enteritidis/) print $8}' sistr.csv |
+## Changing the filtering of the Salmonella serovars to also filter for MLST (Ak 15/02/2023)
+
+### Salmonella enteritidis MLST 11
+awk -vFPAT='([^,]*)|("[^"]+")' -vOFS=, '{IGNORECASE=1; if($15 ~/Enteritidis/) print $8}' /scratch/phesiqcal/$folder/PHET/Salmonella/sistr.csv | 
+while read sample; do awk '(FS="\t") {if($1 ~ '$sample' && $26 == "11") print $1}' /scratch/phesiqcal/$folder/QC_summary.txt ; done | 
 while read line; 
 do 
    ln -fs $dir/BaseCalls/$folder/"$line"_*R1_001.fastq.gz $input_Sentr/"$line"_R1.fastq.gz 
    ln -fs $dir/BaseCalls/$folder/"$line"_*R2_001.fastq.gz $input_Sentr/"$line"_R2.fastq.gz;
-   echo "$current_DateTime -- $folder - "$line" - Salmonella enteritidis Fastq files symlinked to > $input_Sentr" >> /scratch/phesiqcal/$folder/Symlinks_logs_$folder.txt 
+   echo "$current_DateTime -- $folder - "$line" - Salmonella enteritidis MLST 11 Fastq files symlinked to > $input_Sentr" >> /scratch/phesiqcal/$folder/Symlinks_logs_$folder.txt 
 done
 
-
-### Salmonella typhimurium
-awk -vFPAT='([^,]*)|("[^"]+")' -vOFS=, '{IGNORECASE=1; if($15 ~/Typhimurium/) print $8}' sistr.csv |
+### Salmonella typhimurium MLST 19
+awk -vFPAT='([^,]*)|("[^"]+")' -vOFS=, '{IGNORECASE=1; if($15 ~/Typhimurium/) print $8}' /scratch/phesiqcal/$folder/PHET/Salmonella/sistr.csv |
+while read sample; do awk '(FS="\t") {if($1 ~ '$sample' && $26 == "19") print $1}' /scratch/phesiqcal/$folder/QC_summary.txt ; done |
 while read line; 
 do 
    ln -fs $dir/BaseCalls/$folder/"$line"_*R1_001.fastq.gz $input_Styphm/"$line"_R1.fastq.gz 
    ln -fs $dir/BaseCalls/$folder/"$line"_*R2_001.fastq.gz $input_Styphm/"$line"_R2.fastq.gz;
-   echo "$current_DateTime -- $folder - "$line" - Salmonella typhimurium Fastq files symlinked to > $input_Styphm" >> /scratch/phesiqcal/$folder/Symlinks_logs_$folder.txt 
+   echo "$current_DateTime -- $folder - "$line" - Salmonella typhimurium MLST 19 Fastq files symlinked to > $input_Styphm" >> /scratch/phesiqcal/$folder/Symlinks_logs_$folder.txt 
 done
 
 
-### Salmonella virchow
-awk -vFPAT='([^,]*)|("[^"]+")' -vOFS=, '{IGNORECASE=1; if($15 ~/Virchow/) print $8}' sistr.csv |
+### Salmonella virchow MLST 16
+awk -vFPAT='([^,]*)|("[^"]+")' -vOFS=, '{IGNORECASE=1; if($15 ~/Virchow/) print $8}' /scratch/phesiqcal/$folder/PHET/Salmonella/sistr.csv |
+while read sample; do awk '(FS="\t") {if($1 ~ '$sample' && $26 == "16") print $1}' /scratch/phesiqcal/$folder/QC_summary.txt ; done |
 while read line; 
 do 
    ln -fs $dir/BaseCalls/$folder/"$line"_*R1_001.fastq.gz $input_Svirch/"$line"_R1.fastq.gz 
    ln -fs $dir/BaseCalls/$folder/"$line"_*R2_001.fastq.gz $input_Svirch/"$line"_R2.fastq.gz;
-   echo "$current_DateTime -- $folder - "$line" - Salmonella virchow Fastq files symlinked to > $input_Svirch" >> /scratch/phesiqcal/$folder/Symlinks_logs_$folder.txt 
+   echo "$current_DateTime -- $folder - "$line" - Salmonella virchow MLST 16 Fastq files symlinked to > $input_Svirch" >> /scratch/phesiqcal/$folder/Symlinks_logs_$folder.txt 
 done
 
 
-### Salmonella monophasic
-awk -vFPAT='([^,]*)|("[^"]+")' -vOFS=, '{IGNORECASE=1; if($15 ~/Monophasic/) print $8}' sistr.csv |
+### Salmonella monophasic MLST 34
+awk -vFPAT='([^,]*)|("[^"]+")' -vOFS=, '{IGNORECASE=1; if($15 ~/Monophasic/) print $8}' /scratch/phesiqcal/$folder/PHET/Salmonella/sistr.csv |
+while read sample; do awk '(FS="\t") {if($1 ~ '$sample' && $26 == "34") print $1}' /scratch/phesiqcal/$folder/QC_summary.txt ; done |
 while read line; 
 do 
    ln -fs $dir/BaseCalls/$folder/"$line"_*R1_001.fastq.gz $input_Smono/"$line"_R1.fastq.gz 
    ln -fs $dir/BaseCalls/$folder/"$line"_*R2_001.fastq.gz $input_Smono/"$line"_R2.fastq.gz;
-   echo "$current_DateTime -- $folder - "$line" - Salmonella monophasic Fastq files symlinked to > $input_Smono" >> /scratch/phesiqcal/$folder/Symlinks_logs_$folder.txt 
+   echo "$current_DateTime -- $folder - "$line" - Salmonella monophasic MLST 34 Fastq files symlinked to > $input_Smono" >> /scratch/phesiqcal/$folder/Symlinks_logs_$folder.txt 
 done
 
 
-### Salmonella hessarek
-awk -vFPAT='([^,]*)|("[^"]+")' -vOFS=, '{IGNORECASE=1; if($15 ~/Hessarek/) print $8}' sistr.csv |
+### Salmonella hessarek MLST 250
+awk -vFPAT='([^,]*)|("[^"]+")' -vOFS=, '{IGNORECASE=1; if($15 ~/Hessarek/) print $8}' /scratch/phesiqcal/$folder/PHET/Salmonella/sistr.csv |
+while read sample; do awk '(FS="\t") {if($1 ~ '$sample' && $26 == 250") print $1}' /scratch/phesiqcal/$folder/QC_summary.txt ; done |
 while read line; 
 do 
    ln -fs $dir/BaseCalls/$folder/"$line"_*R1_001.fastq.gz $input_Shessk/"$line"_R1.fastq.gz 
    ln -fs $dir/BaseCalls/$folder/"$line"_*R2_001.fastq.gz $input_Shessk/"$line"_R2.fastq.gz;
-   echo "$current_DateTime -- $folder - "$line" - Salmonella hessarek Fastq files symlinked to > $input_Shessk" >> /scratch/phesiqcal/$folder/Symlinks_logs_$folder.txt 
+   echo "$current_DateTime -- $folder - "$line" - Salmonella hessarek MLST 250 Fastq files symlinked to > $input_Shessk" >> /scratch/phesiqcal/$folder/Symlinks_logs_$folder.txt 
 done
 
-
-### Salmonella bovismorbificans
-awk -vFPAT='([^,]*)|("[^"]+")' -vOFS=, '{IGNORECASE=1; if($15 ~/Bovismorbificans/) print $8}' sistr.csv |
+### Salmonella bovismorbificans (all MLST)
+awk -vFPAT='([^,]*)|("[^"]+")' -vOFS=, '{IGNORECASE=1; if($15 ~/Bovismorbificans/) print $8}' /scratch/phesiqcal/$folder/PHET/Salmonella/sistr.csv |
 while read line; 
 do 
    ln -fs $dir/BaseCalls/$folder/"$line"_*R1_001.fastq.gz $input_Sbovis/"$line"_R1.fastq.gz 
@@ -269,12 +271,13 @@ do
    echo "$current_DateTime -- $folder - "$line" - Salmonella bovismorbificans Fastq files symlinked to > $input_Sbovis" >> /scratch/phesiqcal/$folder/Symlinks_logs_$folder.txt 
 done
 
-### Salmonella saintpaul
-awk -vFPAT='([^,]*)|("[^"]+")' -vOFS=, '{IGNORECASE=1; if($15 ~/Saintpaul/) print $8}' sistr.csv |
+### Salmonella saintpaul MLST 50
+awk -vFPAT='([^,]*)|("[^"]+")' -vOFS=, '{IGNORECASE=1; if($15 ~/Saintpaul/) print $8}' /scratch/phesiqcal/$folder/PHET/Salmonella/sistr.csv |
+while read sample; do awk '(FS="\t") {if($1 ~ '$sample' && $26 == "50") print $1}' /scratch/phesiqcal/$folder/QC_summary.txt ; done |
 while read line; 
 do 
    ln -fs $dir/BaseCalls/$folder/"$line"_*R1_001.fastq.gz $input_Ssaint/"$line"_R1.fastq.gz 
    ln -fs $dir/BaseCalls/$folder/"$line"_*R2_001.fastq.gz $input_Ssaint/"$line"_R2.fastq.gz;
-   echo "$current_DateTime -- $folder - "$line" - Salmonella saintpaul Fastq files symlinked to > $input_Ssaint" >> /scratch/phesiqcal/$folder/Symlinks_logs_$folder.txt 
+   echo "$current_DateTime -- $folder - "$line" - Salmonella saintpaul MLST 50 Fastq files symlinked to > $input_Ssaint" >> /scratch/phesiqcal/$folder/Symlinks_logs_$folder.txt 
 done
 )  2>/dev/null

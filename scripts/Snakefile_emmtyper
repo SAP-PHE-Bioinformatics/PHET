@@ -1,0 +1,51 @@
+# Configfile for Shigella samples
+
+configfile: "phet.yaml"
+
+
+##target rules
+if config["spyogenes"]:
+    rule all:
+        input: 
+              expand("PHET/Streptococcus/S_pyogenes/{sample}_emm.txt", sample=config["spyogenes"]),
+              "PHET/Streptococcus/S_pyogenes/Summary_EmmTyper.tsv"
+    
+if config["spyogenes"]:
+    rule EmmTyper:
+        input: 
+              "filtered_contigs/{sample}.fna"
+        output: 
+              "PHET/Streptococcus/S_pyogenes/{sample}_emm.txt"
+        conda:
+              "phetype"    
+        shell: 
+              "emmtyper {input} -o {output} -f verbose"
+
+if config["spyogenes"]:
+    rule EmmTyper_sum:
+        input:
+              files = expand("PHET/Streptococcus/S_pyogenes/{sample}_emm.txt", sample=config["spyogenes"])
+        output:
+              "PHET/Streptococcus/S_pyogenes/Summary_EmmTyper.tsv"
+        run:
+              import pandas as pd
+              import pathlib as pb
+              Efiles = f"{input.files}".split()
+              summary_table = pd.DataFrame()
+              for file in Efiles:
+                  emmtyper = pb.Path(file)
+                  df = pd.read_fwf(emmtyper, header = None, names = ['Isolate Name', 'Number of BLAST hits', 'Number of clusters', 'Predicted emm-type', 'Position(s) emm-like alleles', 
+                  'Possible emm-like alleles', 'emm-like positions', 'EMM cluster'])
+                  df = df.iloc[0:]
+                  tempdf = pd.DataFrame()
+                  sum_df = {'Isolate Name' : df.iloc[0,0], 'Number of BLAST hits' : df.iloc[0,1], 'Number of clusters' : df.iloc[0,2], 'Predicted emm-type' : df.iloc[0,3], 
+                  'Position(s) emm-like alleles' : df.iloc[0,4], 'Possible emm-like alleles' : df.iloc[0,5], 'emm-like position(s)' : df.iloc[0,6], 'EMM cluster' : df.iloc[0,7]
+                   }
+                  tempdf = pd.DataFrame(data = sum_df, index = [0])
+                  if summary_table.empty:
+                       summary_table = tempdf
+                  else:
+                     summary_table = summary_table.append(tempdf, sort = True)
+              cols = ['Isolate Name', 'Number of BLAST hits', 'Number of clusters', 'Predicted emm-type', 'Position(s) emm-like alleles', 'Possible emm-like alleles', 'emm-like position(s) in assembly', 'EMM cluster']
+              summary_table = summary_table.reindex(cols, axis = 'columns')
+              summary_table.to_csv(f"{output}", sep='\t', index = False)

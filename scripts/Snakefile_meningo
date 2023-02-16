@@ -7,7 +7,7 @@ if config["meningitidis"]:
             input:
                   expand("filtered_contigs/{sample}.fna", sample=config["meningitidis"])
             output:
-                  "meningotype.txt"
+                  "PHET/Neisseria/meningitidis/meningotype.txt"
             conda:
                   "phetype"
             shell:

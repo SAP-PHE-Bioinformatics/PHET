@@ -9,24 +9,25 @@ import subprocess as sp
 
 ##target rules###
 
-if config["shigella"]:
+if config["Ssonnei"]:
       rule all:
         input:
-             expand("mykrobe_sonneityping/{sample}.json", sample=config["shigella"]),
-             "mykrobe_parsed_predictResults.tsv"
+             expand("PHET/Shigella/Mykrobe_sonneityping/{sample}.json", sample=config["Ssonnei"]),
+             "mykrobe_parsed_predictResults.tsv",
+             "PHET/Shigella/mykrobe_parsed_predictResults.tsv"
             
 
 
 
 ###MYKROBE SONNEITYPER
 
-if config["shigella"]:
+if config["Ssonnei"]:
       rule sonneityping:
             input:
                  R1 = "input/{sample}_R1.fastq.gz",
                  R2 = "input/{sample}_R2.fastq.gz"
             output: 
-                 "mykrobe_sonneityping/{sample}.json"
+                 "PHET/Shigella/Mykrobe_sonneityping/{sample}.json"
             conda:
                  "pheamr"
             params:
@@ -43,15 +44,31 @@ if config["shigella"]:
 ### Parsing all mykrobe sonneityper json output files into a summary tsv
 
 
-if config["shigella"]:
+if config["Ssonnei"]:
       rule parse_mykrobe:
             input:
-                 expand("mykrobe_sonneityping/{sample}.json", sample=config["shigella"])
+                 expand("PHET/Shigella/Mykrobe_sonneityping/{sample}.json", sample=config["Ssonnei"])
             params:
                  filename = "mykrobe_parsed"
             output:
                  "mykrobe_parsed_predictResults.tsv"
             shell:
                  "python /phe/tools/sonneityping/parse_mykrobe_predict.py --jsons {input} --alleles /phe/tools/sonneityping/alleles.txt --prefix {params.filename}"
+
+
+if config["Ssonnei"]:
+      rule move_files:
+            input:
+                  mykrobe = expand(rules.sonneityping.output, sample=config["Ssonnei"]),
+                  sonnei = rules.parse_mykrobe.output
+            output:
+                  "PHET/Shigella/mykrobe_parsed_predictResults.tsv"
+            params:
+                  outdir = "PHET/Shigella/"
+            shell:
+                  """
+                  mv {input.sonnei} {params.outdir}
+                  """
+               
 
 
