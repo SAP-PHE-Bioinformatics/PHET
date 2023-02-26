@@ -64,11 +64,11 @@ array=(${BCL// / })
 JOBID_BCL=${array[3]}
 
 ### Running QC for Negative controls via slurm
-sbatch --dependency=afterok:${JOBID_BCL} --job-name NTC_QC --mem 10G --ntasks 16 --time 960:00:00 -D /scratch/phesiqcal/$folder/ --wrap "snakemake -j 16 --configfile /scratch/phesiqcal/$folder/config.yaml --snakefile /phe/tools/PHET/scripts/Snakefile_NTC --use-conda"
+sbatch --dependency=afterok:${JOBID_BCL} --job-name NTC_QC -o slurm-%x-%j.out --mem 10G --ntasks 16 --time 960:00:00 -D /scratch/phesiqcal/$folder/ --wrap "snakemake -j 16 --configfile /scratch/phesiqcal/$folder/config.yaml --snakefile /phe/tools/PHET/scripts/Snakefile_NTC --use-conda"
 
 
 ### Running phesiqcal on slurm
-phesiqcal=$(sbatch --dependency=afterok:${JOBID_BCL} --job-name phesiqcal --mem 100G --ntasks 32 --time 960:00:00 -D /scratch/phesiqcal/$folder/ --wrap "snakemake -j 32 --configfile /scratch/phesiqcal/$folder/config.yaml --snakefile /phe/tools/PHET/scripts/Snakefile_phesiqcal")
+phesiqcal=$(sbatch --dependency=afterok:${JOBID_BCL} --job-name phesiqcal -o slurm-%x-%j.out --mem 100G --ntasks 32 --time 960:00:00 -D /scratch/phesiqcal/$folder/ --wrap "snakemake -j 32 --configfile /scratch/phesiqcal/$folder/config.yaml --snakefile /phe/tools/PHET/scripts/Snakefile_phesiqcal")
 
 
 # Identifying job_id of phesiqcal on slurm
