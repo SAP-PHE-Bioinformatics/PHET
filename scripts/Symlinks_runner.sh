@@ -10,8 +10,8 @@ current_DateTime=$(date +'%d/%m/%Y  %R')
 ###PATHWAYS TO THE SYMLINKS FOR EACH PATHOGEN
 
 # #1 Ecoli
-input_Ecoli_O157=/phe/sequencing_data/input/ecoli/O157
-input_Ecoli_O26=/phe/sequencing_data/input/ecoli/O26
+input_Ecoli_O157=/phe/sequencing_data/input/enterobacteriaceae/STEC/O157
+input_Ecoli_O26=/phe/sequencing_data/input/enterobacteriaceae/STEC/O26
 
 # #2 Klebsiella pneumoniae
 input_Kleb_ST29=/phe/sequencing_data/input/klebsiella/pneumoniae/st29
