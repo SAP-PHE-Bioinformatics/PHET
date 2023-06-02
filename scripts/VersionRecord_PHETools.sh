@@ -32,11 +32,6 @@ shovill --version
 
 echo '--------------------------------------------------------------------------------'
 
-echo '## MLST ##'
-mlst --version 
-
-echo '--------------------------------------------------------------------------------'
-
 echo '## PROKKA ##'
 prokka_Version=$(grep -e 'my $VERSION' /phe/tools/miniconda3/envs/phesiqcal/bin/prokka | awk -F "$" '{print $2}' | awk -v FS=';' '{print "prokka " $1}')
 echo $prokka_Version
@@ -49,7 +44,18 @@ abricate --version
 echo '               '
 
 echo '## ABRICATE DATABASE LIST AND LAST UPDATE DATE ##'
-abricate --list 
+# abricate --list 
+
+#getting last updated dates of databases from date stamp of sequences file for three databases used through abricate.
+card_dbupdt=$(stat -c %y /phe/tools/miniconda3/envs/phesiqcal/db/card/sequences | cut -d' ' -f 1)
+vfdb_dbupdt=$(stat -c %y /phe/tools/miniconda3/envs/phesiqcal/db/vfdb/sequences | cut -d' ' -f 1)
+plasmidfinder_dbupdt=$(stat -c %y /phe/tools/miniconda3/envs/phesiqcal/db/plasmidfinder/sequences | cut -d' ' -f 1)
+
+
+echo Last update of CARD database for ABRICATE: $card_dbupdt
+echo Last update of VFDB database for ABRICATE: $vfdb_dbupdt
+echo Last update of PlasmidFinder database for ABRICATE: $plasmidfinder_dbupdt
+
 
 echo '--------------------------------------------------------------------------------'
 
@@ -58,6 +64,12 @@ conda activate amrfinder
 echo ' ## AMRFinderPlus ## '
 amrfinder --version
 
+echo '--------------------------------------------------------------------------------'
+
+conda activate mlst
+
+echo '## MLST ##'
+mlst --version 
 
 echo '
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -132,7 +144,7 @@ echo $serocallversion
 
 echo '--------------------------------------------------------------------------------'
 
-conda activate shigatyper
+conda activate shigatyperV2
 
 echo '## SHIGATYPER for Shigella sp. ##'
 shigatyper --version 
