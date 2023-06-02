@@ -24,7 +24,7 @@ fastafiles=$(awk '(FS="\t") {if($10 ~/Escherichia/ && $12 !~/Shigella/ && $2 >= 
 # done
 
 # i for counter
-i=0
+# i=0
 #until condition with counter/timer to exit if no Clermont output due to no Escherichia in the run, otherwise continue and move the output to PHET folder. 
 # until [[ -d $outdir ]]
 # do
