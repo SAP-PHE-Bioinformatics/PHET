@@ -94,6 +94,8 @@ rule mlst:
         expand("filtered_contigs/{sample}.fna", sample=config["samples"])
    output:
         "mlst.tab"
+   conda:
+        "mlst"
    shell:
         "mlst {input} > {output}"
 
