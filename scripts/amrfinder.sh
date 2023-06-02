@@ -55,3 +55,10 @@ while read -r sample species; do amrfinder -n filtered_contigs/"$sample".fna -O 
 # Streptococcus pyogenes
 awk '(FS="\t") {if($10 ~/Streptococcus pyogenes/ ) print $1,$10 } ' QC_summary.txt |
 while read -r sample species; do amrfinder -n filtered_contigs/"$sample".fna -O Streptococcus_pyogenes --output AMRFinderPlus/"$sample"_amrfinder.tsv --name "$sample"_"$species" --threads 8 --log amrfinder_log.txt; done
+
+#creating summary file using python script
+conda activate phesiqcal 
+
+amr_dir='AMRFinderPlus/'
+
+python /phe/tools/PHET/scripts/amrfinder_summary.py $amr_dir
