@@ -68,7 +68,7 @@ sbatch --dependency=afterok:${JOBID_BCL} --job-name NTC_QC -o slurm-%x-%j.out --
 
 
 ### Running phesiqcal on slurm
-phesiqcal=$(sbatch --dependency=afterok:${JOBID_BCL} --job-name phesiqcal -o slurm-%x-%j.out --mem 100G --ntasks 32 --time 960:00:00 -D /scratch/phesiqcal/$folder/ --wrap "snakemake -j 32 --configfile /scratch/phesiqcal/$folder/config.yaml --snakefile /phe/tools/PHET/scripts/Snakefile_phesiqcal")
+phesiqcal=$(sbatch --dependency=afterok:${JOBID_BCL} --job-name phesiqcal -o slurm-%x-%j.out --mem 100G --ntasks 32 --time 960:00:00 -D /scratch/phesiqcal/$folder/ --wrap "snakemake -j 32 --configfile /scratch/phesiqcal/$folder/config.yaml --snakefile /phe/tools/PHET/scripts/Snakefile_phesiqcal --use-conda")
 
 
 # Identifying job_id of phesiqcal on slurm
