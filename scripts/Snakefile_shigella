@@ -30,7 +30,7 @@ if config["shigella"]:
                   "{sample}.tsv",
                   "{sample}-hits.tsv"
             conda:
-                 "shigatyper"
+                 "shigatyperV2"
             shell:
                  """
                  shigatyper --R1 {input.R1} --R2 {input.R2}
