@@ -15,9 +15,9 @@ awk 'BEGIN {print "spyogenes:"}; (FS="\t") {if($10 == "Streptococcus pyogenes" &
 
 awk 'BEGIN {print "shigella:"}; (FS="\t") {if($10 ~/Shigella/ || $12 ~/Shigella/ && $2 >= 1000000 && $16 <= 500 ) print "- " $1  }' QC_summary.txt
 
-awk 'BEGIN {print "Ssonnei:"}; (FS="\t") {if($10 == "Shigella sonnei" || $12 == "Shigella sonnei" && $2 >= 1000000 && $16 <= 500 ) print "- " $1  }' QC_summary.txt
+awk 'BEGIN {print "Ssonnei:"}; (FS="\t") {if($10 == "Shigella sonnei" && $2 >= 1000000 && $16 <= 500 || $12 == "Shigella sonnei" && $2 >= 1000000 && $16 <= 500 ) print "- " $1  }' QC_summary.txt
 
-awk 'BEGIN {print "ecoli:"}; (FS="\t") {if($10 == "Escherichia coli" && $2 >= 1000000 && $16 <= 500 ) print "- " $1 }' QC_summary.txt
+awk 'BEGIN {print "ecoli:"}; (FS="\t") {if($10 == "Escherichia coli" && $12 !~/Shigella/ && $2 >= 1000000 && $16 <= 500 ) print "- " $1 }' QC_summary.txt
 
 awk 'BEGIN {print "meningitidis:"}; (FS="\t") {if($10 == "Neisseria meningitidis" && $2 >= 800000 && $16 <= 500 ) print "- " $1 }' QC_summary.txt
 
