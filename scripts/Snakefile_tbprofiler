@@ -3,9 +3,9 @@ configfile: "phet.yaml"
 
 if config["tuberculosis"]:
     rule all:
-           input:
-                expand("scratch/mycobacterium/MTBC/tb_profiler/results/{sample}.csv", sample=config["tuberculosis"]),
-                expand("scratch/mycobacterium/MTBC/tb_profiler/results/{sample}.json", sample=config["tuberculosis"])
+          input:
+              expand("/scratch/mycobacterium/MTBC/tb_profiler/results/{sample}.csv", sample=config["tuberculosis"]),
+              expand("/scratch/mycobacterium/MTBC/tb_profiler/results/{sample}.json", sample=config["tuberculosis"])
 
 if config["tuberculosis"]:
     rule tbprofiler:
@@ -13,8 +13,8 @@ if config["tuberculosis"]:
              R1 = "input/{sample}_R1.fastq.gz",
              R2 = "input/{sample}_R2.fastq.gz"
          output: 
-             "scratch/mycobacterium/MTBC/tb_profiler/results/{sample}.csv",
-             "scratch/mycobacterium/MTBC/tb_profiler/results/{sample}.json"
+             "/scratch/mycobacterium/MTBC/tb_profiler/results/{sample}.csv",
+             "/scratch/mycobacterium/MTBC/tb_profiler/results/{sample}.json"
          params:
               name = "{sample}"
          conda:
