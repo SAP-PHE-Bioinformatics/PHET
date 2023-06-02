@@ -104,7 +104,7 @@ done
 
 
 ### Mycobacterium abscessus
-awk '(FS="\t") {if($10 ~/Mycobacteroides abscessus/ && $2 >= 1000000 && $16 <= 500) print $1 } ' QC_summary.txt |
+awk '(FS="\t") {if($10 ~/abscessus/ && $2 >= 1000000 && $16 <= 500) print $1 } ' QC_summary.txt |
 while read line; 
 do 
    ln -fs $dir/BaseCalls/$folder/"$line"_*R1_001.fastq.gz $input_MABS/"$line"_R1.fastq.gz 
@@ -114,7 +114,7 @@ done
 
 
 ### Mycobacterium tuberculosis
-awk '(FS="\t") {if($10  ~/Mycobacterium tuberculosis/ && $2 >= 1000000 && $16 <= 500) print $1 } ' QC_summary.txt |
+awk '(FS="\t") {if($10  ~/tuberculosis/ && $2 >= 1000000 && $16 <= 500) print $1 } ' QC_summary.txt |
 while read line; 
 do 
    ln -fs $dir/BaseCalls/$folder/"$line"_*R1_001.fastq.gz $input_MTBC/"$line"_R1.fastq.gz 
@@ -124,7 +124,7 @@ done
 
 
 ### Mycobacterium intracellulare 
-awk '(FS="\t") {if($10 ~/Mycobacterium intracellulare/ && $2 >= 1000000 && $16 <= 500) print $1 } ' QC_summary.txt |
+awk '(FS="\t") {if($10 ~/intracellulare/ && $2 >= 1000000 && $16 <= 500) print $1 } ' QC_summary.txt |
 while read line; 
 do 
    ln -fs $dir/BaseCalls/$folder/"$line"_*R1_001.fastq.gz $input_MAIC/"$line"_R1.fastq.gz 
@@ -134,7 +134,7 @@ done
 
 
 ### Mycobacterium chimaera
-awk '(FS="\t") {if($10 ~/Mycobacterium chimaera/ && $2 >= 1000000 && $16 <= 500) print $1 } ' QC_summary.txt |
+awk '(FS="\t") {if($10 ~/chimaera/ && $2 >= 1000000 && $16 <= 500) print $1 } ' QC_summary.txt |
 while read line; 
 do 
    ln -fs $dir/BaseCalls/$folder/"$line"_*R1_001.fastq.gz $input_MAIC/"$line"_R1.fastq.gz 
@@ -144,7 +144,7 @@ done
 
 
 ### Mycobacterium avium
-awk '(FS="\t") {if($10  ~/Mycobacterium avium/ && $2 >= 1000000 && $16 <= 500) print $1 } ' QC_summary.txt |
+awk '(FS="\t") {if($10  ~/avium/ && $2 >= 1000000 && $16 <= 500) print $1 } ' QC_summary.txt |
 while read line; 
 do 
    ln -fs $dir/BaseCalls/$folder/"$line"_*R1_001.fastq.gz $input_MAVI/"$line"_R1.fastq.gz 
@@ -154,7 +154,7 @@ done
 
 
 ### Mycobacterium chelonae
-awk '(FS="\t") {if($10  ~/Mycobacterium chelonae/ && $2 >= 1000000 && $16 <= 500) print $1 } ' QC_summary.txt |
+awk '(FS="\t") {if($10  ~/chelonae/ && $2 >= 1000000 && $16 <= 500) print $1 } ' QC_summary.txt |
 while read line; 
 do 
    ln -fs $dir/BaseCalls/$folder/"$line"_*R1_001.fastq.gz $input_MCHEL/"$line"_R1.fastq.gz 
@@ -164,7 +164,7 @@ done
 
 
 ### Mycobacterium mucogenicum 
-awk '(FS="\t") {if($10  ~/Mycobacterium mucogenicum/ && $2 >= 1000000 && $16 <= 500) print $1 } ' QC_summary.txt |
+awk '(FS="\t") {if($10  ~/mucogenicum/ && $2 >= 1000000 && $16 <= 500) print $1 } ' QC_summary.txt |
 while read line; 
 do 
    ln -fs $dir/BaseCalls/$folder/"$line"_*R1_001.fastq.gz $input_MMUCO/"$line"_R1.fastq.gz 
@@ -173,8 +173,8 @@ do
 done
 
 
-## Shigella sonnei
-awk '(FS="\t") {if($10 == "Shigella sonnei" || $12 == "Shigella sonnei" && $2 >= 1000000 && $16 <= 500) print $1 } ' QC_summary.txt |
+## Shigella  #3/4/23 Fixed the filtering bug for Shigella sonnei symlink.
+awk '(FS="\t") {if($10 == "Shigella sonnei" && $2 >= 1000000 && $16 <= 500 || $12 == "Shigella sonnei" && $2 >= 1000000 && $16 <= 500) print $1 } ' QC_summary.txt |
 while read line; 
 do 
    ln -fs $dir/BaseCalls/$folder/"$line"_*R1_001.fastq.gz $input_Ssonn/"$line"_R1.fastq.gz 
@@ -251,15 +251,15 @@ do
    echo "$current_DateTime -- $folder - "$line" - Salmonella monophasic MLST 34 Fastq files symlinked to > $input_Smono" >> /scratch/phesiqcal/$folder/Symlinks_logs_$folder.txt 
 done
 
-
-### Salmonella hessarek MLST 250
+#4/4/23 Fixed the MLST number to 255
+### Salmonella hessarek MLST 255
 awk -vFPAT='([^,]*)|("[^"]+")' -vOFS=, '{IGNORECASE=1; if($15 ~/Hessarek/) print $8}' /scratch/phesiqcal/$folder/PHET/Salmonella/sistr.csv |
-while read sample; do awk '(FS="\t") {if($1 ~ '$sample' && $26 == 250") print $1}' /scratch/phesiqcal/$folder/QC_summary.txt ; done |
+while read sample; do awk '(FS="\t") {if($1 ~ '$sample' && $26 == 255") print $1}' /scratch/phesiqcal/$folder/QC_summary.txt ; done |
 while read line; 
 do 
    ln -fs $dir/BaseCalls/$folder/"$line"_*R1_001.fastq.gz $input_Shessk/"$line"_R1.fastq.gz 
    ln -fs $dir/BaseCalls/$folder/"$line"_*R2_001.fastq.gz $input_Shessk/"$line"_R2.fastq.gz;
-   echo "$current_DateTime -- $folder - "$line" - Salmonella hessarek MLST 250 Fastq files symlinked to > $input_Shessk" >> /scratch/phesiqcal/$folder/Symlinks_logs_$folder.txt 
+   echo "$current_DateTime -- $folder - "$line" - Salmonella hessarek MLST 255 Fastq files symlinked to > $input_Shessk" >> /scratch/phesiqcal/$folder/Symlinks_logs_$folder.txt 
 done
 
 ### Salmonella bovismorbificans (all MLST)
