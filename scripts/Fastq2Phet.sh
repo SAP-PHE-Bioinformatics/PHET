@@ -23,8 +23,8 @@ cd /scratch/phesiqcal/$folder/input
 ls $input/ | cut -f 1 -d "_" |
 while read line;
 do
-   ln -fs $input"$line"*R1*.gz /scratch/phesiqcal/$folder/input/"$line"_R1.fastq.gz
-   ln -fs $input"$line"*R2*.gz /scratch/phesiqcal/$folder/input/"$line"_R2.fastq.gz;
+   ln -fs $input"$line"*1*.gz /scratch/phesiqcal/$folder/input/"$line"_R1.fastq.gz
+   ln -fs $input"$line"*2*.gz /scratch/phesiqcal/$folder/input/"$line"_R2.fastq.gz;
 done
 
 cd /scratch/phesiqcal/$folder/ 
@@ -57,7 +57,7 @@ sbatch --job-name NTC_QC --mem 10G --ntasks 16 --time 960:00:00 -D /scratch/phes
 
 
 ### Running phesiqcal on slurm
-phesiqcal=$(sbatch --job-name phesiqcal --mem 100G --ntasks 32 --time 960:00:00 -D /scratch/phesiqcal/$folder/ --wrap "snakemake -j 32 --configfile /scratch/phesiqcal/$folder/config.yaml --snakefile /phe/tools/PHET/scripts/Snakefile_phesiqcal")
+phesiqcal=$(sbatch --job-name phesiqcal --mem 100G --ntasks 32 --time 960:00:00 -D /scratch/phesiqcal/$folder/ --wrap "snakemake -j 32 --configfile /scratch/phesiqcal/$folder/config.yaml --snakefile /phe/tools/PHET/scripts/Snakefile_phesiqcal --use-conda")
 
 
 # Identifying job_id of phesiqcal on slurm
