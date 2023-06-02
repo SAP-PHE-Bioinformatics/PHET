@@ -42,7 +42,7 @@ sbatch --dependency=afterok:${JOBID_phesiqcal} --job-name legsta -o slurm-%x-%j.
 sbatch --dependency=afterok:${JOBID_phesiqcal} --job-name emmtyper -o slurm-%x-%j.out --mem 50G --ntasks 16 --time 960:00:00 -D /scratch/phesiqcal/$folder/ --wrap "snakemake -j 16 --configfile /scratch/phesiqcal/$folder/PHET/phet.yaml --snakefile /phe/tools/PHET/scripts/Snakefile_emmtyper --use-conda"
 
 # ClermonTyping for Escherichia genus
-sbatch --dependency=afterok:${JOBID_phesiqcal} --job-name clermonT -o slurm-%x-%j.out --mem 50G --ntasks 16 --time 960:00:00 -D /scratch/phesiqcal/$folder/ --wrap "/phe/tools/PHET/scripts/Clermont_runner.sh"
+sbatch --dependency=afterok:${JOBID_phesiqcal} --job-name clermonT -o slurm-%x-%j.out --mem 50G --ntasks 16 --time 01:00:00 -D /scratch/phesiqcal/$folder/ --wrap "/phe/tools/PHET/scripts/Clermont_runner.sh"
 
 
 # Running amrfinderplus as dependency of phesiqcal for AMR analysis
