@@ -196,7 +196,7 @@ done
 # i for counter
 i=0
 #until condition with counter/timer
-until [[ -e /scratch/phesiqcal/$folder/PHET/Salmonella/]]
+until [[ -e /scratch/phesiqcal/$folder/PHET/Salmonella/sistr.csv]]
 do
    sleep 300
    if [[ $i -eq 10800 ]]
