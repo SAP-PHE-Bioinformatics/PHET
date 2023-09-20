@@ -16,30 +16,42 @@ mkdir -p /scratch/phesiqcal/$folder/input
 
 
 ## change to input directory and create symlinks from input fastq directory to $folder/input
-cd /scratch/phesiqcal/$folder/input
+cd /scratch/phesiqcal/$folder/
 
 
 # creating symlinks of Fastq file in working directory
-ls $input/ | cut -f 1 -d "_" |
+(
+ls $input | cut -f 1 -d "_" |
 while read line;
 do
-   ln -fs $input"$line"*1*.gz /scratch/phesiqcal/$folder/input/"$line"_R1.fastq.gz
-   ln -fs $input"$line"*2*.gz /scratch/phesiqcal/$folder/input/"$line"_R2.fastq.gz;
+   ln -fs $input"$line"_*1*.gz /scratch/phesiqcal/$folder/input/"$line"_R1.fastq.gz
+   ln -fs $input"$line"_*2*.gz /scratch/phesiqcal/$folder/input/"$line"_R2.fastq.gz;
 done
+)  2> symlink_error_log.txt
+
+(
+ls $input | cut -f 1 -d "_" |
+while read line;
+do
+   ln -fs $input"$line"_*R1*.gz /scratch/phesiqcal/$folder/input/"$line"_R1.fastq.gz
+   ln -fs $input"$line"_*R2*.gz /scratch/phesiqcal/$folder/input/"$line"_R2.fastq.gz;
+done
+)  2> symlink_error_log.txt
+
 
 cd /scratch/phesiqcal/$folder/ 
 
-##creating config file for PHEsiQCal snakemake pipeline
+#creating config file for phesiqcal snakemake pipeline
 
-ls $input | cut -f 1 -d "_" | awk 'BEGIN{print "samples:"}; {IGNORECASE=1}; {if($0 !~/NEG/) print "- " $line | "sort -u"}' > /scratch/phesiqcal/$folder/config.yaml
+ls $input | cut -f 1 -d "_" | awk 'BEGIN{print "controls+samples:"}; {IGNORECASE=1}; {print "- " $line | "sort -u"}' > /scratch/phesiqcal/$folder/config.yaml
 
-ls $input | cut -f 1 -d "_" | awk 'BEGIN {print "negative:"}; {IGNORECASE=1}; {if( $0 ~/NEG/ ) print "- " $line }' >> /scratch/phesiqcal/$folder/config.yaml
+ls $input | cut -f 1 -d "_" | awk 'BEGIN {print "samples:"}; {IGNORECASE=1}; {if( $0 !~/NEG/ ) print "- " $line | "sort -u"}' >> /scratch/phesiqcal/$folder/config.yaml
 
 
 
 ### Pausing following jobs until above processes completed.
 
-secs=$((15))
+secs=$((10))
 while [ $secs -gt 0 ]; do
    echo -ne "Waiting $secs\033[0K\r"
    sleep 1
@@ -52,8 +64,9 @@ source /phe/tools/miniconda3/etc/profile.d/conda.sh
 
 conda activate phesiqcal
 
-### Running QC for Negative controls
-sbatch --job-name NTC_QC --mem 10G --ntasks 16 --time 960:00:00 -D /scratch/phesiqcal/$folder/ --wrap "snakemake -j 16 --configfile /scratch/phesiqcal/$folder/config.yaml --snakefile /phe/tools/PHET/scripts/Snakefile_NTC"
+### Running QC for Negative controls 
+# 30/06/23 - not required, negatives processed in the same pipeline, printed along with samples in config.
+# sbatch --job-name NTC_QC --mem 10G --ntasks 16 --time 960:00:00 -D /scratch/phesiqcal/$folder/ --wrap "snakemake -j 16 --configfile /scratch/phesiqcal/$folder/config.yaml --snakefile /phe/tools/PHET/scripts/Snakefile_NTC"
 
 
 ### Running phesiqcal on slurm
