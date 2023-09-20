@@ -14,7 +14,8 @@ if config["Ssonnei"]:
         input:
              expand("PHET/Shigella/Mykrobe_sonneityping/{sample}.json", sample=config["Ssonnei"]),
              "mykrobe_parsed_predictResults.tsv",
-             "PHET/Shigella/mykrobe_parsed_predictResults.tsv"
+             "PHET/Shigella/mykrobe_parsed_predictResults.tsv",
+             "PHET/Shigella/Shigella_sonnei_report_summary.tsv"
             
 
 
@@ -70,5 +71,82 @@ if config["Ssonnei"]:
                   mv {input.sonnei} {params.outdir}
                   """
                
+if config["Ssonnei"]:
+      rule report_sum:
+            input:
+                  seq = "seq_data.tab",
+                  deno = "denovo.tab",
+                  kraken = "species_identification.tab",
+                  st = "mlst.tab",
+                  resist = "resistome.tab",
+                  amr = "amrfinder_summary.tsv",
+                  shigtyper = "PHET/Shigella/Summary_Shigatyper.tsv",
+                  mykrobe = "PHET/Shigella/mykrobe_parsed_predictResults.tsv"
+
+            output:
+                  S_sonnei = "PHET/Shigella/Shigella_sonnei_report_summary.tsv"
+            run:
+                  import pandas as pd
+                  import numpy as np
+
+                  # reading, filtering and formatting seq_data
+                  seqdata = pd.read_csv(f"{input.seq}", sep ='\t')
+                  seqdata = seqdata.loc[:, ~seqdata.columns.str.contains('^Unnamed')]
+                  seqdata = seqdata.loc[:, ['#Accession', 'Reads', 'AvgQual']]
+                  # reading, filtering and formatting denovo assembly stats
+                  denovo = pd.read_csv(f"{input.deno}", sep = '\t')
+                  denovo['Name'] = denovo['Name'].str.replace(r'filtered_contigs/', '')
+                  denovo['Name'] = denovo['Name'].str.replace(r'.fna', '')
+                  denovo = denovo.loc[:,['Name','no']]
+                  denovo = denovo.rename({'Name': '#Accession', 'no':'contigs'}, axis=1)
+                  denovo['contigs'] = denovo['contigs'].astype(int)
+                  # reading kraken data
+                  sp = pd.read_csv(f"{input.kraken}", sep='\t')
+                  # reading, filtering and formatting MLST data
+                  cols_list = ['#Accession', 'scheme', 'ST', 'allele1', 'allele2', 'allele3', 'allele4', 'allele5', 'allele6', 'allele7', 'allele8']
+                  mlst = pd.read_csv(f"{input.st}", sep='\t', header=None, names=cols_list)
+                  mlst['#Accession'] = mlst['#Accession'].str.replace(r'filtered_contigs/', '')
+                  mlst['#Accession'] = mlst['#Accession'].str.replace(r'.fna', '')
+                  mlst = mlst.loc[:,['#Accession', 'scheme', 'ST']]
+                  # reading, filtering and formatting resistome.tab
+                  resistome = pd.read_csv(f"{input.resist}", sep='\t')
+                  resistome['#FILE'] = resistome['#FILE'].str.replace(r'/abricate.tab', '')
+                  resistome = resistome.rename({'#FILE': '#Accession', 'NUM_FOUND' : 'ABRICATE_count'}, axis =1)
+                  resistome = resistome.replace('.', np.nan)
+                  # reading, filtering and formatting amrfinder data
+                  amrfinder = pd.read_csv(f"{input.amr}", sep ='\t')
+                  amrfinder = amrfinder.rename({'Name': '#Accession'}, axis =1)
+                  amrfinder = amrfinder.replace('-', np.nan)
+                  amrfinder.insert(1, "AMRFP_Count", amrfinder.count(axis=1), True)
+                  amrfinder['AMRFP_Count'] = amrfinder['AMRFP_Count']-1
+                  # reading and formatting shigatyper data
+                  shtyper = pd.read_csv(f"{input.shigtyper}", sep='\t')
+                  shtyper = shtyper.rename({'Sample': '#Accession', 'Prediction' : 'ShigaTyper Prediction'}, axis =1)
+                  shtyper['#Accession'] = shtyper['#Accession'].astype(str)
+                  # reading, filtering and formatting sonneityping data
+                  sonnei = pd.read_csv(f"{input.mykrobe}", sep = '\t')
+                  col_to_drop = 5
+                  sonnei = sonnei.iloc[:, :-col_to_drop]
+                  sonnei = sonnei.rename({'genome':'#Accession', 'species':'MYKROBE_species'}, axis =1)
+                  sonnei['#Accession'] = sonnei['#Accession'].astype(str)
+
+                  # Creating final output file by merge
+                  all_files = [sp, mlst, shtyper, sonnei, resistome, amrfinder]
+
+                  # merging two files first
+                  Output_df = pd.merge(seqdata, denovo, on='#Accession', how='inner')
+                  
+                  # Removing any Shigella sonnei, removing any columns with all NA values
+                  # Inserting Genomic QC column to include pass or fail criteria based on QC conditions
+                  for i in all_files:
+                        Output_df = pd.merge(Output_df, i, on='#Accession', how='inner')
+
+                  # Removing any columns with all NA values
+                  # Inserting Genomic QC column to include pass or fail criteria based on QC conditions
+                  Output_df.dropna(axis=1, how='all', inplace = True)
+                  Output_df.insert(1, 'Genomic QC', '')
+                  Output_df['Genomic QC']=np.where((Output_df['Reads']>= 1000000) & (Output_df['contigs']<= 500) & (Output_df['AvgQual'] >= 30), 'PASS', 'FAIL' )
+                  # writing to output file
+                  Output_df.to_csv(f"{output.S_sonnei}", sep="\t", header=True, index=False)
 
 
