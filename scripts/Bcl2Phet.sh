@@ -77,7 +77,7 @@ JOBID_phesiqcal=${array[3]}
 source /phe/tools/PHET/scripts/Start_TypingTools.sh
 
 # Running shell script to record versions of QC and typing tools + Databases in PHET.
-source /phe/tools/PHET/scripts/VersionRecord_PHETools.sh >> /scratch/phesiqcal/$folder/PHETools_Versions_$folder.txt &
+source /phe/tools/PHET/scripts/VersionRecord_PHETools.sh >> /scratch/phesiqcal/$folder/PHETools_Versions_$folder.csv &
 
 # path to the shell script to create symlinks of Fastq files to selected pathogen folders
 source /phe/tools/PHET/scripts/Symlinks_runner.sh &
