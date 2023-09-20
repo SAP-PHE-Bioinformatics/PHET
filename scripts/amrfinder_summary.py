@@ -45,6 +45,7 @@ selected_data = []
 
 for data in all_files:
     d = data.loc[:,['Name', 'Gene symbol', 'Class', '% Coverage of reference sequence']]
+    d['Name'] = data['Name'].str.split('_').str[0]
     d.rename(columns={"% Coverage of reference sequence":"Coverage", "Gene symbol":"Gene"}, inplace = True)
     selected_data.append(d)
 
@@ -52,14 +53,17 @@ for data in all_files:
 
 transposed_df = []
 
-for df in selected_data:
-    df2 = df.set_index(['Name', 'Gene'], append=False).Coverage.unstack()
-    transposed_df.append(df2)
+# for df in selected_data:
+#     df2 = df.set_index(['Name', 'Gene'], append=False).Coverage.unstack()
+#     transposed_df.append(df2)
 
 # for df in selected_data:
 #     df2 = df.pivot_table(index = 'Name', columns='Gene', values='Coverage')
 #     transposed_df.append(df2)
 
+for df in selected_data:
+    df2 = df.pivot_table(index = 'Name', columns='Gene', values='Coverage', aggfunc='first')
+    transposed_df.append(df2)
     
 # creating one big summary
 
@@ -73,7 +77,10 @@ sorteddf = concatdf.sort_index().sort_index(axis=1)
 
 # writing to a file
 
-dateToday = datetime.now().strftime('%Y%m%d')
-filename = f'amrfinder_summary_{dateToday}.tsv'
+# dateToday = datetime.now().strftime('%Y%m%d')
+# filename = f'amrfinder_summary_{dateToday}.tsv'
+
+filename = 'amrfinder_summary.tsv'
+
 
 sorteddf.to_csv((filename), sep = "\t", index = True)
