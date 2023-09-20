@@ -3,181 +3,114 @@
 
 source /phe/tools/miniconda3/etc/profile.d/conda.sh
 
-conda activate phesiqcal
-
-
 current_DateTime=$(date +'%d/%m/%Y  %R')
 
-echo $current_DateTime 
-
-echo '
-BACTERIAL WGS RUN ID :' $folder 
+echo Date, $current_DateTime 
   
+# echo BACTERIAL WGS RUN ID, $folder
+echo BACTERIAL WGS RUN ID,$folder
 
+echo ' '
 
-echo '
-::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-                                                                                    '
+echo Tools, Tool_version, Databases, DB_version
+echo '____________','____________','____________','____________'
 
-echo '######   PHEsiQCal - QC TOOLS and DATABASES ######
-                                 
-                                 '
-echo '## KRAKEN ##'
-kraken2 --version 
+conda activate phesiqcal
 
-echo '--------------------------------------------------------------------------------'
+# KRAKEN
+KRAKEN=$(kraken2 --version | head -n 1 | cut -f 3 -d " ")
+KRAKEN_DB=$(basename /scratch/kraken/k2_pluspf_20220607/)
+echo Kraken2,$KRAKEN,Kraken_k2_db,$KRAKEN_DB
 
-echo '## SHOVILL ##'
-shovill --version 
+# SHOVILL 
+shovill --version | tr " " ","
 
-echo '--------------------------------------------------------------------------------'
+# PROKKA
+PROKKA=$(grep -e 'my $VERSION' /phe/tools/miniconda3/envs/phesiqcal/bin/prokka | awk -F "$" '{print $2}' | awk -v FS=';' '{print "prokka " $1}' | cut -f 4 -d " " | tr -d '"')
+echo Prokka,$PROKKA
 
-echo '## PROKKA ##'
-prokka_Version=$(grep -e 'my $VERSION' /phe/tools/miniconda3/envs/phesiqcal/bin/prokka | awk -F "$" '{print $2}' | awk -v FS=';' '{print "prokka " $1}')
-echo $prokka_Version
-
-echo '--------------------------------------------------------------------------------'
-
-echo '## ABRICATE ##'
-abricate --version 
-
-echo '               '
-
-echo '## ABRICATE DATABASE LIST AND LAST UPDATE DATE ##'
-# abricate --list 
-
-#getting last updated dates of databases from date stamp of sequences file for three databases used through abricate.
+# ABRICATE + Databases
+ABRICATE=$(abricate --version | cut -f 2 -d " ")
 card_dbupdt=$(stat -c %y /phe/tools/miniconda3/envs/phesiqcal/db/card/sequences | cut -d' ' -f 1)
 vfdb_dbupdt=$(stat -c %y /phe/tools/miniconda3/envs/phesiqcal/db/vfdb/sequences | cut -d' ' -f 1)
 plasmidfinder_dbupdt=$(stat -c %y /phe/tools/miniconda3/envs/phesiqcal/db/plasmidfinder/sequences | cut -d' ' -f 1)
 
+echo ABRicate,$ABRICATE,CARD,v"$card_dbupdt"
+echo ABRicate,,VFDB,v"$vfdb_dbupdt"
+echo ABRicate,,PlasmidFinder,v"$plasmidfinder_dbupdt"
 
-echo Last update of CARD database for ABRICATE: $card_dbupdt
-echo Last update of VFDB database for ABRICATE: $vfdb_dbupdt
-echo Last update of PlasmidFinder database for ABRICATE: $plasmidfinder_dbupdt
-
-
-echo '--------------------------------------------------------------------------------'
-
-conda activate amrfinder
-
-echo ' ## AMRFinderPlus ## '
-amrfinder --version
-
-echo '--------------------------------------------------------------------------------'
-
+# MLST
 conda activate mlst
+mlst --version | tr " " ","
 
-echo '## MLST ##'
-mlst --version 
+# AMRFINDERPLUS
+conda activate amrfinder
+AMRFINDER=$(amrfinder --version)
+echo AMRFinderPlus,$AMRFINDER
 
-echo '
-:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-                                                                                    '
+# TYPING TOOLS
 
-# activating conda environment for programs in phetype conda environment'
 conda activate phetype
 
-echo '###### PHET - TYPING TOOLS and DATABASES ######
-                                                      '
+# SISTR - SALMONELLA
+sistr --version | tr " " ","
 
-echo '## SISTR for Salmonella enterica ##'
-sistr --version 
+# NGMASTER - NEISSERIA GONORRHOEAE
+ngmaster --version | tr " " ","
 
-echo '--------------------------------------------------------------------------------'
 
-echo '## NGMASTER for Neisseria gonorrhoeae ##'
-ngmaster --version 
+# PYNGSTAR - NEISSERIA GONORRHOEAE
+PYNGSTAR=$(stat -c %y /phe/tools/pyngSTar/pyngSTar.py | cut -d' ' -f1)
+pyngSTarDB=$(grep -rn /phe/tools/PHET/scripts/Snakefile_ngono -e pyngSTarDB | cut -f 9 -d "/")
+echo "PyngSTar (Last modified date of script)",v"$PYNGSTAR",ngstar_DB,$pyngSTarDB
 
-echo '--------------------------------------------------------------------------------'
+# LISSERO - Listeria
+lissero --version | tr " " ","
 
-echo '## PYNGSTAR database version/date for Neisseria gonorrhoeae' 
+# MENINGOTYPE - Neisseria meningitidis
+meningotype --version | tr " " ","
 
-lastupdtdate=$(stat -c %y /phe/tools/pyngSTar/pyngSTar.py | cut -d' ' -f1)
-pyngSTarDB=$( basename /phe/tools/pyngSTar/pyngSTarDB_100522/)
 
-echo Last modified date of pyngSTar script: $lastupdtdate
-echo current database: $pyngSTarDB
+# LEGSTA - Legionella
+legsta --version | tr " " ","
 
-echo '--------------------------------------------------------------------------------'
+# ECTYPER - Escherichia coli
+ECTYPER=$(ectyper --version | cut -f 2 -d " ")
+ECTYPER_DB=$(ectyper --version | cut -f 6 -d " ")
+echo ECTyper,$ECTYPER,"ECTyper_DB (in-built)",v"$ECTYPER_DB"
 
-echo '## LISSERO for Listeria ##'
-lissero --version 
+# CLERMONTYPING - Escherichia coli
+CLERMONT=$(/phe/tools/ClermonTyping/clermonTyping.sh -v | head -n 1 | cut -f 2 -d ":")
+echo ClermonTyping,$CLERMONT
 
-echo '--------------------------------------------------------------------------------'
+# EMMTYPER - Streptococcus pyogenes
+emmtyper --version | tr " " ","
 
-echo '## MENINGOTYPE for Neisseria meningitidis ##'
-meningotype --version 
-
-echo '--------------------------------------------------------------------------------'
-
-echo '## LEGSTA for Legionella ##'
-legsta --version 
-
-echo '--------------------------------------------------------------------------------'
-
-echo '## ECTYPER for Escherichia coli ##'
-ectyper --version 
-
-echo '--------------------------------------------------------------------------------'
-
-echo '## ClermonTyping for Escherichia genus ##'
-/phe/tools/ClermonTyping/clermonTyping.sh -v | head -n 1
-
-echo '--------------------------------------------------------------------------------'
-
-echo '## EmmTyper for Streptococcus pyogenes ##'
-emmtyper --version 
-
-echo '--------------------------------------------------------------------------------'
-
+# SEROBA - Streptococcus pneumoniae
 conda activate seroba
+SEROBA=$(seroba version)
+echo SeroBA,$SEROBA
 
-echo '## SEROBA for Streptococcus pneumoniae ##'
-echo 'seroba version'; seroba version
+# SEROCALL - Streptococcus pneumoniae
+SEROCALL=$(grep -n SeroCallv /phe/tools/SeroCall/serocall.py | cut -d "=" -f 2 | awk -v FS='\' '{print $1}')
+echo SeroCall,$SEROCALL
 
-echo '--------------------------------------------------------------------------------'
-
-echo '## SEROCALL for Streptococcus pneumoniae ##'
-serocallversion=$(grep -n SeroCallv /phe/tools/SeroCall/serocall.py | cut -d "=" -f 2 | awk -v FS='\' '{print $1}')
-echo $serocallversion
-
-echo '--------------------------------------------------------------------------------'
-
+# SHIGATYPER - Shigella spp.
 conda activate shigatyperV2
+shigatyper --version | tr " " ","
 
-echo '## SHIGATYPER for Shigella sp. ##'
-shigatyper --version 
-
-echo '--------------------------------------------------------------------------------'
-
+# SHIGEIFINDER - Shigella spp.
 conda activate shigeifinder
+SHIGEIFINDER=$(grep -e Name -e Version /phe/tools/miniconda3/envs/shigeifinder/lib/python3.11/site-packages/shigeifinder-1.3.2.dist-info/METADATA | grep -v Metadata | sed -n '2 p' | cut -f 2 -d ":")
+echo ShigEiFinder,$SHIGEIFINDER
 
-echo '## SHIGEIFINDER for Shigella sp. ##'
-shigeifinderV=$(grep -e Name -e Version /phe/tools/miniconda3/envs/shigeifinder/lib/python3.11/site-packages/shigeifinder-1.3.2.dist-info/METADATA | grep -v Metadata)
-echo $shigeifinderV
-
-echo '--------------------------------------------------------------------------------'
-
-
+# MYKROBE - Shigella sonnei
 conda activate pheamr
+MYKROBE=$(mykrobe --version | cut -f 2 -d " ")
+ALLELES_DB=$(basename /phe/tools/sonneityping/versions/alleles_20210201.txt | cut -f 1 -d ".")
+echo Mykrobe,$MYKROBE,Sonneityping_alleles_DB,$ALLELES_DB
 
-echo '## MYKROBE PREDICT for Shigella sonnei AMR predictions ##'
-mykrobe --version 
-
-
-alleles_txt=$(basename /phe/tools/sonneityping/versions/alleles_20210201.txt)
-echo '
-Last updated version/date of alleles.txt used for lineage name in 
-mykrobe sonneityping:' $alleles_txt
-
-echo '--------------------------------------------------------------------------------'
-
+# TBPROFILER - Mycobacterium tuberuclosis
 conda activate tbprofiler
-
-echo '## TB-PROFILER for Mycobacterium tuberculosis ##'
-tb-profiler version 
-
-echo '
-:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-                                                                                  '
+TBPROFILER=$(tb-profiler version | cut -f 3 -d " ")
+echo TBProfiler,$TBPROFILER
