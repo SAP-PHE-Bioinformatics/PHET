@@ -12,8 +12,7 @@ echo BACTERIAL WGS RUN ID,$folder
 
 echo ' '
 
-echo Tools, Tool_version, Databases, DB_version
-echo '____________','____________','____________','____________'
+echo TOOLS,TOOL_VERSION,DATABASES,DB_VERSION
 
 conda activate phesiqcal
 
