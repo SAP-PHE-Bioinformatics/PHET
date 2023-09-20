@@ -25,9 +25,11 @@ cd /scratch/phesiqcal/$folder
 
 #awk -F ',' 'BEGIN{ print "samples:"}; FNR > 21 {if($0 !~/NEG/ && $0 !~/Metagenomic/ && $0 !~/FUNGAL/) print "- " $2|"sort -u"}' $input > config.yaml
 #awk -F ',' 'BEGIN{ print "negative:"}; ( $0 ~/NEG/ ){print "- " $2 }' $input >> config.yaml
+# awk -F ',' 'BEGIN{ print "samples:"}; {IGNORECASE=1}; FNR > 21 {if($2 !="" && $0 !~/NEG/ && $0 !~/Metagenomic/ && $0 !~/FUNGAL/) print "- " $2|"sort -u"}' $input > config.yaml
+# awk -F ',' 'BEGIN{ print "negative:"}; {IGNORECASE=1}; ( $0 ~/NEG/ ){print "- " $2 }' $input >> config.yaml
 
-awk -F ',' 'BEGIN{ print "samples:"}; {IGNORECASE=1}; FNR > 21 {if($0 !~/NEG/ && $0 !~/Metagenomic/ && $0 !~/FUNGAL/) print "- " $2|"sort -u"}' $input > config.yaml
-awk -F ',' 'BEGIN{ print "negative:"}; {IGNORECASE=1}; ( $0 ~/NEG/ ){print "- " $2 }' $input >> config.yaml
+awk -F ',' 'BEGIN{ print "controls+samples:"}; {IGNORECASE=1}; FNR > 21 {if($2 !="" && $0 !~/Metagenomic/ && $0 !~/FUNGAL/) print "- " $2|"sort -u"}' $input > config.yaml
+awk -F ',' 'BEGIN{ print "samples:"}; {IGNORECASE=1}; FNR > 21 {if($2 !="" && $0 !~/NEG/ && $0 !~/Metagenomic/ && $0 !~/FUNGAL/) print "- " $2|"sort -u"}' $input >> config.yaml
 
 ### Create input folder
 
@@ -39,9 +41,9 @@ cd /scratch/phesiqcal/$folder/input
 
 secs=$((30))
 while [ $secs -gt 0 ]; do
-   echo -ne "Waiting $secs\033[0K\r"
-   sleep 1
-   : $((secs--))
+  echo -ne "Waiting $secs\033[0K\r"
+  sleep 1
+  : $((secs--))
 done
 
 ### Create symlinks
@@ -49,7 +51,7 @@ done
 for i in `ls $dir/BaseCalls/$folder/*.fastq.gz | cut -f 8 -d "/" | cut -f 1 -d "_" | sort -u`
 do 
 	ln -fs $dir/BaseCalls/$folder/"$i"_*R1_001.fastq.gz /scratch/phesiqcal/$folder/input/"$i"_R1.fastq.gz
-        ln -fs $dir/BaseCalls/$folder/"$i"_*R2_001.fastq.gz /scratch/phesiqcal/$folder/input/"$i"_R2.fastq.gz
+  ln -fs $dir/BaseCalls/$folder/"$i"_*R2_001.fastq.gz /scratch/phesiqcal/$folder/input/"$i"_R2.fastq.gz
 done
  
 ### Load phesiqcal module
@@ -63,8 +65,8 @@ conda activate phesiqcal
 array=(${BCL// / })
 JOBID_BCL=${array[3]}
 
-### Running QC for Negative controls via slurm
-sbatch --dependency=afterok:${JOBID_BCL} --job-name NTC_QC -o slurm-%x-%j.out --mem 10G --ntasks 16 --time 960:00:00 -D /scratch/phesiqcal/$folder/ --wrap "snakemake -j 16 --configfile /scratch/phesiqcal/$folder/config.yaml --snakefile /phe/tools/PHET/scripts/Snakefile_NTC --use-conda"
+### Running QC for Negative controls via  - no longer required, included in main snakefile 16/06/2023. AK
+#sbatch --dependency=afterok:${JOBID_BCL} --job-name NTC_QC -o slurm-%x-%j.out --mem 10G --ntasks 16 --time 960:00:00 -D /scratch/phesiqcal/$folder/ --wrap "snakemake -j 16 --configfile /scratch/phesiqcal/$folder/config.yaml --snakefile /phe/tools/PHET/scripts/Snakefile_NTC --use-conda"
 
 
 ### Running phesiqcal on slurm
