@@ -1,0 +1,73 @@
+configfile: "phet.yaml"
+
+
+if config["paeruginosa"]:
+    rule all:
+        input: 
+             expand("{sample}.tsv", sample=config["paeruginosa"]),
+             expand("{sample}.blastn.tsv", sample=config["paeruginosa"]), 
+             expand("{sample}.details.tsv", sample=config["paeruginosa"]),
+             "PHET/Pseudomonas_aeruginosa/Summary_pasty.tsv",
+             directory("PHET/Pseudomonas_aeruginosa/pasty/")
+
+          
+
+if config["paeruginosa"]:
+    rule pasty:
+        input:
+            fasta = "filtered_contigs/{sample}.fna"
+        output:
+            "{sample}.tsv",
+            "{sample}.blastn.tsv",
+            "{sample}.details.tsv"
+        params:
+            pasty_db = "/phe/tools/miniconda3/envs/pasty/share/pasty-1.0.2/OSAdb.fasta"
+        conda:
+            "pasty"
+        shell:
+            "pasty --assembly {input.fasta} --db {params.pasty_db} --min_pident 90 --min_coverage 90"
+
+
+
+if config["paeruginosa"]:
+    rule pasty_summary:
+        input:
+            files = expand("{sample}.tsv", sample=config["paeruginosa"])
+        output: 
+            "PHET/Pseudomonas_aeruginosa/Summary_pasty.tsv"
+        run:
+            import pandas as pd 
+            import pathlib as pb 
+            pfiles = f"{input.files}".split()
+            summary_table = pd.DataFrame()
+            for file in pfiles:
+                pasty = pb.Path(file)
+                df = pd.read_csv(pasty, sep = '\t', header = None, names = ['sample', 'serogroup', 'coverage', 'fragments', 'comment'])
+                df = df.iloc[1:]
+                tempdf = pd.DataFrame()
+                sum_df = {'Sample' : df.iloc[0,0], 'Predicted Serogroup' : df.iloc[0,1], 
+                'Coverage' : df.iloc[0,2], 'Fragments (BLAST hits)' : df.iloc[0,3], 'Comment' : df.iloc[0,4]}
+                tempdf = pd.DataFrame(data = sum_df, index = [0])
+                if summary_table.empty:
+                    summary_table = tempdf
+                else:
+                    summary_table = summary_table.append(tempdf, sort = True)
+            cols = ['Sample', 'Predicted Serogroup', 'Coverage', 'Fragments (BLAST hits)', 'Comment']
+            summary_table = summary_table.reindex(cols, axis = 'columns')
+            summary_table.to_csv(f"{output}", sep = "\t", index = False)
+           
+
+if config["paeruginosa"]:
+      rule move_tsv:
+            input:
+                 out = expand(rules.pasty.output, sample=config["paeruginosa"]),
+                 sum = rules.pasty_summary.output
+            output:
+                 directory("PHET/Pseudomonas_aeruginosa/pasty")
+            params:
+                 outdir = "PHET/Pseudomonas_aeruginosa/pasty/"
+            shell:
+                  """
+                  mkdir {params.outdir}
+                  mv {input.out} {params.outdir}
+                  """
