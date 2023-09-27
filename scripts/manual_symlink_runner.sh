@@ -218,7 +218,7 @@ done
 
 ### Salmonella enteritidis MLST 11
 awk -vFPAT='([^,]*)|("[^"]+")' -vOFS=, '{IGNORECASE=1; if($15 ~/Enteritidis/) print $8}' /scratch/phesiqcal/$MID/PHET/Salmonella/sistr.csv | 
-while read sample; do awk '(FS="\t") {if($1 ~ '$sample' && $25 == "11") print $1}' /scratch/phesiqcal/$MID/QC_summary.txt ; done | 
+while read sample; do awk '(FS="\t") {if($1 ~ '$sample' && $25 == 11) print $1}' /scratch/phesiqcal/$MID/QC_summary.txt ; done | 
 while read line; 
 do 
    ln -fs $dir/"$line"_*R1_001.fastq.gz $input_Sentr/"$line"_R1.fastq.gz 
@@ -228,7 +228,7 @@ done
 
 ### Salmonella typhimurium MLST 19
 awk -vFPAT='([^,]*)|("[^"]+")' -vOFS=, '{IGNORECASE=1; if($15 ~/Typhimurium/) print $8}' /scratch/phesiqcal/$MID/PHET/Salmonella/sistr.csv |
-while read sample; do awk '(FS="\t") {if($1 ~ '$sample' && $25 == "19") print $1}' /scratch/phesiqcal/$MID/QC_summary.txt ; done |
+while read sample; do awk '(FS="\t") {if($1 ~ '$sample' && $25 == 19) print $1}' /scratch/phesiqcal/$MID/QC_summary.txt ; done |
 while read line; 
 do 
    ln -fs $dir/"$line"_*R1_001.fastq.gz $input_Styphm/"$line"_R1.fastq.gz 
@@ -239,7 +239,7 @@ done
 
 ### Salmonella virchow MLST 16
 awk -vFPAT='([^,]*)|("[^"]+")' -vOFS=, '{IGNORECASE=1; if($15 ~/Virchow/) print $8}' /scratch/phesiqcal/$MID/PHET/Salmonella/sistr.csv |
-while read sample; do awk '(FS="\t") {if($1 ~ '$sample' && $25 == "16") print $1}' /scratch/phesiqcal/$MID/QC_summary.txt ; done |
+while read sample; do awk '(FS="\t") {if($1 ~ '$sample' && $25 == 16) print $1}' /scratch/phesiqcal/$MID/QC_summary.txt ; done |
 while read line; 
 do 
    ln -fs $dir/"$line"_*R1_001.fastq.gz $input_Svirch/"$line"_R1.fastq.gz 
@@ -250,7 +250,7 @@ done
 
 ### Salmonella monophasic MLST 34
 awk -vFPAT='([^,]*)|("[^"]+")' -vOFS=, '{IGNORECASE=1; if($15 ~/Monophasic/) print $8}' /scratch/phesiqcal/$MID/PHET/Salmonella/sistr.csv |
-while read sample; do awk '(FS="\t") {if($1 ~ '$sample' && $25 == "34") print $1}' /scratch/phesiqcal/$MID/QC_summary.txt ; done |
+while read sample; do awk '(FS="\t") {if($1 ~ '$sample' && $25 == 34) print $1}' /scratch/phesiqcal/$MID/QC_summary.txt ; done |
 while read line; 
 do 
    ln -fs $dir/"$line"_*R1_001.fastq.gz $input_Smono/"$line"_R1.fastq.gz 
@@ -261,7 +261,7 @@ done
 #4/4/23 Fixed the MLST number to 255
 ### Salmonella hessarek MLST 255
 awk -vFPAT='([^,]*)|("[^"]+")' -vOFS=, '{IGNORECASE=1; if($15 ~/Hessarek/) print $8}' /scratch/phesiqcal/$MID/PHET/Salmonella/sistr.csv |
-while read sample; do awk '(FS="\t") {if($1 ~ '$sample' && $25 == "255") print $1}' /scratch/phesiqcal/$MID/QC_summary.txt ; done |
+while read sample; do awk '(FS="\t") {if($1 ~ '$sample' && $25 == 255) print $1}' /scratch/phesiqcal/$MID/QC_summary.txt ; done |
 while read line; 
 do 
    ln -fs $dir/"$line"_*R1_001.fastq.gz $input_Shessk/"$line"_R1.fastq.gz 
@@ -280,7 +280,7 @@ done
 
 ### Salmonella saintpaul MLST 50
 awk -vFPAT='([^,]*)|("[^"]+")' -vOFS=, '{IGNORECASE=1; if($15 ~/Saintpaul/) print $8}' /scratch/phesiqcal/$MID/PHET/Salmonella/sistr.csv |
-while read sample; do awk '(FS="\t") {if($1 ~ '$sample' && $25 == "50") print $1}' /scratch/phesiqcal/$MID/QC_summary.txt ; done |
+while read sample; do awk '(FS="\t") {if($1 ~ '$sample' && $25 == 50) print $1}' /scratch/phesiqcal/$MID/QC_summary.txt ; done |
 while read line; 
 do 
    ln -fs $dir/"$line"_*R1_001.fastq.gz $input_Ssaint/"$line"_R1.fastq.gz 
