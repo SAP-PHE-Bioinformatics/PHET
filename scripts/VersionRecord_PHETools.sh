@@ -40,7 +40,10 @@ echo ABRicate,,PlasmidFinder,v"$plasmidfinder_dbupdt"
 
 # MLST
 conda activate mlst
-mlst --version | tr " " ","
+MLST=$(mlst --version | cut -f 2 -d " ")
+MLST_DB_lastupdt=$(stat -c %y /phe/tools/miniconda3/envs/mlst/db/pubmlst | cut -f 1 -d " ")
+
+echo mlst,$MLST,PubMLST_db,v"$MLST_DB_lastupdt"
 
 # AMRFINDERPLUS
 conda activate amrfinder
