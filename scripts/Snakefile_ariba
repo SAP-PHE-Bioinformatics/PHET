@@ -1,0 +1,124 @@
+configfile: "config.yaml"
+
+## rule all
+
+rule all:
+    input:
+        directory(expand("{sample}/ARIBA", sample=config["samples"])),
+        expand("ARIBA_Summaries/{sample}_ariba.csv", sample=config["samples"]),
+        "ariba_summary.csv",
+        "ariba_summary.xlsx"
+
+
+rule ariba:
+    input:
+        R1 = "input/{sample}_R1.fastq.gz",
+        R2 = "input/{sample}_R2.fastq.gz",
+        Ref = "/phe/tools/ariba/database/CARD/out.card_3.2.7.prepareref/"
+    output:
+        directory("{sample}/ARIBA/")
+    conda:
+        "seroba"
+    shell:
+        "ariba run {input.Ref} {input.R1} {input.R2} {output}"
+
+        
+rule ariba_condensed:
+    input:
+        "{sample}/ARIBA/report.tsv"
+    output:
+        "ARIBA_Summaries/{sample}_ariba.csv"
+    run:
+        import os
+        import pandas as pd
+        import numpy as np 
+        import pathlib
+        import glob
+        allfiles = f"{input}".split()
+        # Adding the corresponding sample ID from the subdirectories for each corresponding report.tsv
+        # Changing the format of two columns to str, to keep data type consistent for filtering
+        data = []
+        for tsv in allfiles:
+            ariba = pathlib.Path(tsv)
+            df = pd.read_csv(tsv, sep="\t")
+            df['Sample_ID'] = f"{ariba.parts[0]}"
+            df['known_var'] = df['known_var'].astype(str)
+            df['has_known_var'] = df['has_known_var'].astype(str)
+            data.append(df)
+        # Data filtering and re-formatting
+        filtered_data = []
+        for d in data:
+            # Selecting only the known genes+variants from the ARIBA db metadata by excluding "0" which are genes/variants not in the db metadata
+            filter_df = d.loc[~d['known_var'].isin(["0"])]
+            # Creating a new column to store name of Gene detected, which is extracted from the reference name the sample has mapped to
+            filter_df['Gene'] = filter_df[('ref_name')].copy()
+            filter_df.loc[:,['Gene']] = filter_df['Gene'].str.split('.', n=1).str.get(0)
+            # Selecting only the required columns from each file
+            filter_df = filter_df[['Sample_ID', 'ref_name', 'cluster', 'Gene', 'var_only', 'pc_ident', 'ctg_cov', 
+            'has_known_var', 'known_var_change', 'ref_ctg_change', 'ref_ctg_effect', 'ref_nt', 'ctg_nt', 'var_description', 'free_text']]
+            # replacing the "0" in the below column to change to NaN to identify samples with no resistance gene variants detected and remove data from other columns
+            filter_df['has_known_var'] = filter_df['has_known_var'].replace("0",np.nan,regex = True)
+            filter_df.loc[(filter_df['has_known_var'].isnull()), ['ref_name', 'cluster', 'Gene', 'var_only', 'pc_ident', 'ctg_cov', 'has_known_var', 
+            'known_var_change', 'ref_ctg_change', 'ref_ctg_effect', 'ref_nt', 'ctg_nt', 'var_description', 'free_text']] = np.nan
+            filter_df.rename(columns={"ctg_cov":"ctg_depth", "var_only": "var_only (0=presence/absence, 1=variant only)"}, inplace=True)
+            filter_df = filter_df.reset_index(drop=True)
+            # remove the duplicated NA rows from each df, keeping one last row in dataframes with all NA rows only
+            filter_df2= filter_df['has_known_var'].notna()
+            filter_df3 = filter_df['Sample_ID'].isin(filter_df.loc[filter_df2, 'Sample_ID'])
+            sum_df = filter_df[filter_df2 | ~filter_df3]
+            sum_df = sum_df.drop_duplicates(keep = 'last')
+            # Filling the two columns for dataframes with no genes or gene variants detcted.
+            sum_df.loc[(sum_df['has_known_var'].isnull()), ['has_known_var']] = 'No known variants detected'
+            sum_df.loc[(sum_df['Gene'].isnull()), ['Gene']] = 'None detected'
+            # Removing the prefix from the sample_ID columns and resetting index and finally appending to list.
+            sum_df['Sample_ID'] = sum_df['Sample_ID'].str.replace('output_', '')
+            sum_df = sum_df.reset_index(drop=True)
+            filtered_data.append(sum_df)
+        for df in filtered_data:
+            file_names = df["Sample_ID"].iloc[0]
+            df.to_csv(f"{output}", sep = ",", index = False)
+
+
+rule ariba_sum:
+    input:
+        expand("ARIBA_Summaries/{sample}_ariba.csv", sample=config["samples"])
+    output:
+        csv = "ariba_summary.csv",
+        excel = "ariba_summary.xlsx"
+    run:
+        import os
+        import sys
+        import pandas as pd
+        import numpy as np
+        from datetime import datetime
+        import pathlib
+        files = f"{input}".split()
+        all_files = []
+        for f in files:
+            summary = pathlib.Path(f)
+            df = pd.read_csv(f, sep=",")
+            all_files.append(df)
+
+        selected_data = []
+        for data in all_files:  
+            d = data.loc[:,['Sample_ID', 'Gene', 'pc_ident', 'known_var_change']]
+            d.loc[(d['pc_ident'].isnull()), ['pc_ident']] = 'N/A'
+            d.loc[(d['known_var_change'].isnull()), ['known_var_change']] = 'N/A'
+            selected_data.append(d)   
+
+        transposed_df = []
+        for df in selected_data:
+            df2 = df.pivot_table(index = ['Sample_ID'], columns=['Gene', 'known_var_change'], values='pc_ident', aggfunc='first')
+            transposed_df.append(df2)
+        concatdf = pd.DataFrame()
+        concatdf = concatdf.append(transposed_df, ignore_index=False)
+        concatdf = concatdf.fillna('-', axis =1)
+        concatdf = concatdf.rename_axis(None)
+        concatdf.to_csv(f"{output.csv}", sep=",", index = True)
+        concatdf.to_excel(f"{output.excel}")
+
+        
+
+
+
+
