@@ -8,6 +8,8 @@ conda activate phetype
 
 cd /scratch/phesiqcal/$folder
 
+sbatch --dependency=afterok:${JOBID_phesiqcal} --job-name ariba_sum -o slurm-%x-%j.out --mem 50G --ntasks 16 --time 960:00:00 -D /scratch/phesiqcal/$folder/ --wrap "snakemake -j 8 --configfile /scratch/phesiqcal/$folder/config.yaml --snakefile /phe/tools/PHET/scripts/Snakefile_Ariba_summary --use-conda --nolock"
+
 # Running amrfinderplus as dependency of phesiqcal for AMR analysis
 amr=$(sbatch --dependency=afterok:${JOBID_phesiqcal} --job-name amr -o slurm-%x-%j.out --mem 50G --ntasks 24 --time 960:00:00 -D /scratch/phesiqcal/$folder/ --wrap "/phe/tools/PHET/scripts/amrfinder.sh")
 
