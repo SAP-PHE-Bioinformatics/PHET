@@ -28,6 +28,7 @@ rule all:
         expand("{sample}/plasmid.tab", sample=config["samples"]),
         directory(expand("{sample}/prokka", sample=config["samples"])),
         "plasmid.tab",
+        directory(expand("{sample}/ARIBA", sample=config["samples"])),
         "seq_data.tab",
         "species_identification.tab",
         "gtdb_species_id.tab",
@@ -174,6 +175,19 @@ rule plasmid_sum:
    shell:
         "abricate --summary {input} > {output}"
 
+
+rule ariba:
+    input:
+        R1 = "input/{sample}_R1.fastq.gz",
+        R2 = "input/{sample}_R2.fastq.gz",
+        Ref = "/phe/tools/ariba/database/CARD/out.card_3.2.7.prepareref/"
+    output:
+        directory("{sample}/ARIBA/")
+    conda:
+        "seroba"
+    shell:
+        "ariba run {input.Ref} {input.R1} {input.R2} {output} --threads 4"
+        
 rule seq_data:
     input:
         expand("{sample}/yield.tab", sample=config["controls+samples"])
