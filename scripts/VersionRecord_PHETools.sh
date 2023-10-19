@@ -12,6 +12,10 @@ echo BACTERIAL WGS RUN ID,$folder
 
 echo ' '
 
+echo 'Pipeline: Bcl2PHET v3.0.0'
+
+echo ' '
+
 echo TOOLS,TOOL_VERSION,DATABASES,DB_VERSION
 
 conda activate phesiqcal
