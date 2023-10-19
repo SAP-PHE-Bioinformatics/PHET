@@ -2,6 +2,14 @@ configfile: "phet.yaml"
 
 #target rules#
 
+
+if config["meningitidis"]:
+      rule all:
+            input:
+                  "PHET/Neisseria/meningitidis/meningotype.txt",
+                  expand("PHET/Neisseria/meningitidis/contigs/{sample}.fna", sample=config["meningitidis"]),
+                  directory("PHET/Neisseria/meningitidis/characterize_neisseria_capsule_results/")
+
 if config["meningitidis"]:
       rule meningotype:
             input:
@@ -12,3 +20,27 @@ if config["meningitidis"]:
                   "phetype"
             shell:
                   "meningotype --bast --finetype --porB {input} > {output}"
+
+
+if config["meningitidis"]:
+      rule copy_contigs:
+            input:
+                  expand("filtered_contigs/{sample}.fna", sample=config["meningitidis"])
+            output:
+                  "PHET/Neisseria/meningitidis/contigs/{sample}.fna"
+            conda:
+                  "phetype"
+            shell:
+                  "cp {input} {output}"
+
+
+if config["meningitidis"]:
+      rule neisseria_capsule:
+            input:
+                  expand(rules.copy_contigs.output, sample=config["meningitidis"])
+            output:
+                  directory("PHET/Neisseria/meningitidis/characterize_neisseria_capsule_results/")
+            conda:
+                  "phetype"
+            shell:
+                  "python /phe/tools/characterize_neisseria_capsule/characterize_neisseria_capsule.py -d PHET/Neisseria/meningitidis/contigs/ -o {output}"
