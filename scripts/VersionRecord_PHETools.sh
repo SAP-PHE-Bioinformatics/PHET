@@ -50,6 +50,12 @@ conda activate amrfinder
 AMRFINDER=$(amrfinder --version)
 echo AMRFinderPlus,$AMRFINDER
 
+# ARIBA
+conda activate seroba
+ARIBA=$(ariba version | head -n 1 | cut -f 2 -d ":")
+echo Ariba,$ARIBA
+
+
 # TYPING TOOLS
 
 conda activate phetype
