@@ -31,7 +31,9 @@ if config["meningitidis"]:
             conda:
                   "phetype"
             shell:
-                  "cp {input} {output}"
+                  """
+                  cp {input} PHET/Neisseria/meningitidis/contigs/
+                  """
 
 
 if config["meningitidis"]:
