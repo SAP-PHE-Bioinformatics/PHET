@@ -176,6 +176,7 @@ if config["shigella"]:
                amrfinder = amrfinder.replace('-', np.nan)
                amrfinder.insert(1, "AMRFP_Count", amrfinder.count(axis=1), True)
                amrfinder['AMRFP_Count'] = amrfinder['AMRFP_Count']-1
+               amrfinder['#Accession'] = amrfinder['#Accession'].astype(str)
                # reading and formatting shigeifinder results
                shfinder = pd.read_csv(f"{input.shigfinder}", sep ='\t')
                shfinder = shfinder.rename({'SAMPLE ID': '#Accession', 'SEROTYPE': 'ShigeiFinder Serotype Prediction'}, axis =1)
