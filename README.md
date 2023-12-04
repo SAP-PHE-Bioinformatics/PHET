@@ -1,4 +1,4 @@
-![Objectives and Tools](https://github.com/SAP-PHE-Bioinformatics/PHET/assets/112604261/81091e7a-e259-4a25-bdb2-2c453208eba8)# *Under development for public use*
+# *Under development for public use*
 # PHET
 Microbial genomics pipeline for downstream processing of whole genome sequenced bacterial isolates including QC assessment and bacterial subtyping, used by Pathogen genomics in Public Health and Epidemiology, South Australia. Automated using Snakemake and Slurm for processing on HPC cluster. It is a similar workflow as Nullarbor, but it only runs isolate specific analysis. No phylogenetic tree and pangenome analysis will be generated. 
 A snakemake workflow that process fastq files of bacterial pathogens to produce the following outputs:
