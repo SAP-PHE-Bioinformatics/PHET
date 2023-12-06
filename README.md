@@ -3,7 +3,7 @@
 *This pipeline is an extension of the original pipeline [PHEsiQCal](https://github.com/SAP-PHE-Bioinformatics/PHEsiQCal_-Eyre-) by Pathogen Genomic Lead, Lex Leong, at SA Pathology, with addition of automation of selective bacterial subtyping tools and reduced run time.*
 
 ## Introduction
-Microbial genomics pipeline for downstream processing of whole genome sequenced (WGS) bacterial isolates including QC assessment and bacterial subtyping, used by Pathogen genomics in Public Health and Epidemiology, South Australia. Automated using Snakemake and Slurm for processing on HPC cluster. It is a similar workflow as Nullarbor, but it only runs isolate specific analysis. No phylogenetic tree and pangenome analysis will be generated. 
+Microbial genomics pipeline for downstream processing of whole genome sequenced (WGS) bacterial isolates including QC assessment and bacterial subtyping, used by Pathogen genomics in Public Health and Epidemiology, South Australia. Automated using Snakemake and Slurm for processing on HPC cluster. It is a similar workflow as Nullarbor, but it only runs isolate specific analysis. Has a sub-workflow to process No Template Control (NTC). No phylogenetic tree and pangenome analysis will be generated. 
 
 Initiated by input of a Sample Sheet to a shell script as: <br>
 `/path/to/the/Bcl2Phet.sh /path/to/the/SampleSheet.csv/` , <br>
@@ -24,6 +24,12 @@ followed by a snakemake workflow that processes fastq files of bacterial pathoge
 7) Plasmid detection (abricate using plasmidfinder db)
 
 8) Virulence factor detection (abricate using VFDB)
+
+
+#### No template control (NTC) workflow
+The pipeline includes the sub-workflow for No Template Controls (NTC) is determined by the NTC sample ID given as "NEG" in the sample sheet input. 
+Only runs sequencing quality and kraken2 on NTCs to check for any potential contamination in a bacterial agnostic WGS run.
+
 
 ### Produces following summary files:
 
