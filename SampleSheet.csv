@@ -1,0 +1,25 @@
+[Header],,,,,,,,,,,,,,,
+IEMFileVersion,4,,,,,,,,,,,,,,
+Investigator Name,Name,,,,,,,,,,,,,,
+Experiment Name,RUNID,,,,,,,,,,,,,,
+Date,4/28/2022,,,,,,,,,,,,,,
+Workflow,GenerateFASTQ,,,,,,,,,,,,,,
+Application,NextSeq FASTQ Only,,,,,,,,,,,,,,
+Assay,NexteraXT,,,,,,,,,,,,,,
+Description,,,,,,,,,,,,,,,
+Chemistry,Default,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,
+[Reads],,,,,,,,,,,,,,,
+151,,,,,,,,,,,,,,,
+151,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,
+[Settings],,,,,,,,,,,,,,,
+Adapter,,,,,,,,,,,,,,,
+AdapterRead2,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,
+[Data],,,,,,,,,,,,,,,
+FCID,Sample_ID,SampleRef,I7_Index_ID,index,I5_Index_ID,index2,Description,Operator,Sample_Project,ProjectType,SampleType
+,1,Salmonella,index1_i7,GCCTATCA,index1_i5,AATGGTCG,RUNID_,0,RUNID,ENTERIC,Salmonella_enterica
+,2,Salmonella,index2_i7_98,CTTGGATG,index2_i5_98,TCGCTATC,RUNID_,0,RUNID,RESEARCH,Escherichia_coli
+,3,Salmonella,index3_i7_99,AGTCTCAC,index3_i5_99,CGTCCATT,RUNID_,0,RUNID,RESEARCH,Klebsiella_spp.
+,4,Salmonella,index4_i7_100,CTCATCAG,index4_i5_100,TACTAGCG,RUNID_,0,RUNID,RESEARCH,Klebsiella_spp.
