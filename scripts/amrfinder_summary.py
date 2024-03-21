@@ -58,7 +58,6 @@ transposed_df = []
 # for df in selected_data:
 #     df2 = df.set_index(['Name', 'Gene'], append=False).Coverage.unstack()
 #     transposed_df.append(df2)
-
 # for df in selected_data:
 #     df2 = df.pivot_table(index = 'Name', columns='Gene', values='Coverage')
 #     transposed_df.append(df2)
