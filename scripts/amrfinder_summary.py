@@ -38,6 +38,7 @@ for i in range(len(all_files) -1, 0, -1):
     if all_files[i].empty:
         del all_files[i]
 
+print(all_files)
 
 # filtering data
 
@@ -45,6 +46,7 @@ selected_data = []
 
 for data in all_files:
     d = data.loc[:,['Name', 'Gene symbol', 'Class', '% Coverage of reference sequence']]
+    d['Name'] = d['Name'].astype(str)    
     d['Name'] = data['Name'].str.split('_').str[0]
     d.rename(columns={"% Coverage of reference sequence":"Coverage", "Gene symbol":"Gene"}, inplace = True)
     selected_data.append(d)
@@ -63,9 +65,13 @@ transposed_df = []
 
 for df in selected_data:
     df2 = df.pivot_table(index = 'Name', columns='Gene', values='Coverage', aggfunc='first')
+    df2.insert(0, "Gene_count", df2.count(axis=1), True)
     transposed_df.append(df2)
+    print(transposed_df)
     
 # creating one big summary
+transposed_df = [df for df in transposed_df if df is not None and not df.empty]
+
 
 concatdf = pd.DataFrame()
 concatdf = concatdf.append(transposed_df, ignore_index=False)
