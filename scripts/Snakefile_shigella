@@ -174,8 +174,8 @@ if config["shigella"]:
                amrfinder = pd.read_csv(f"{input.amr}", sep ='\t')
                amrfinder = amrfinder.rename({'Name': '#Accession'}, axis =1)
                amrfinder = amrfinder.replace('-', np.nan)
-               amrfinder.insert(1, "AMRFP_Count", amrfinder.count(axis=1), True)
-               amrfinder['AMRFP_Count'] = amrfinder['AMRFP_Count']-1
+               # amrfinder.insert(1, "AMRFP_Count", amrfinder.count(axis=1), True)
+               # amrfinder['AMRFP_Count'] = amrfinder['AMRFP_Count']-1
                amrfinder['#Accession'] = amrfinder['#Accession'].astype(str)
                # reading and formatting shigeifinder results
                shfinder = pd.read_csv(f"{input.shigfinder}", sep ='\t')
