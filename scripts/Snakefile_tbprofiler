@@ -3,9 +3,9 @@ configfile: "phet.yaml"
 
 if config["tuberculosis"]:
     rule all:
-          input:
-              expand("/scratch/mycobacterium/MTBC/tb_profiler/results/{sample}.csv", sample=config["tuberculosis"]),
-              expand("/scratch/mycobacterium/MTBC/tb_profiler/results/{sample}.json", sample=config["tuberculosis"])
+         input:
+              expand("/scratch/bacterial_pathogens/Mycobacterium/tuberculosis/tb_profiler/results/{sample}.results.csv", sample=config["tuberculosis"]),
+              expand("/scratch/bacterial_pathogens/Mycobacterium/tuberculosis/tb_profiler/results/{sample}.results.json", sample=config["tuberculosis"])
 
 if config["tuberculosis"]:
     rule tbprofiler:
@@ -13,11 +13,12 @@ if config["tuberculosis"]:
              R1 = "input/{sample}_R1.fastq.gz",
              R2 = "input/{sample}_R2.fastq.gz"
          output: 
-             "/scratch/mycobacterium/MTBC/tb_profiler/results/{sample}.csv",
-             "/scratch/mycobacterium/MTBC/tb_profiler/results/{sample}.json"
+             "/scratch/bacterial_pathogens/Mycobacterium/tuberculosis/tb_profiler/results/{sample}.results.csv",
+             "/scratch/bacterial_pathogens/Mycobacterium/tuberculosis/tb_profiler/results/{sample}.results.json"
          params:
-              name = "{sample}"
+              name = "{sample}",
+              threads = 4 
          conda:
               "tbprofiler"
          shell: 
-              "tb-profiler profile -1 {input.R1} -2 {input.R2} --csv -p {params.name} --dir /scratch/mycobacterium/MTBC/tb_profiler"
+              "tb-profiler profile -1 {input.R1} -2 {input.R2} --csv -p {params.name} --dir /scratch/bacterial_pathogens/Mycobacterium/tuberculosis/tb_profiler/ -t {params.threads}"
