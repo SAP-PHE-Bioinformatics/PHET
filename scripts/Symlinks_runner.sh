@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# input=${1?Error:no SampleSheet.csv given}
+
 ## change directory to the run folder in scratch
 cd /scratch/phesiqcal/$folder
 
@@ -39,6 +41,7 @@ input_Ssaint=/phe/sequencing_data/input/salmonella/saintpaul
 
 # #6 Shigella
 input_Ssonn=/phe/sequencing_data/input/shigella/sonnei
+input_Sflex=/phe/sequencing_data/input/shigella/sflexneri/ST245
 
 
 # waiting for QC_summary.txt and /scratch/phesiqcal/$folder/PHET/Salmonella/sistr.csv to be created using until loop
@@ -181,6 +184,16 @@ do
    ln -fs $dir/BaseCalls/$folder/"$line"_*R1_001.fastq.gz $input_Ssonn/"$line"_R1.fastq.gz 
    ln -fs $dir/BaseCalls/$folder/"$line"_*R2_001.fastq.gz $input_Ssonn/"$line"_R2.fastq.gz;
    echo "$current_DateTime -- $folder - "$line" - Shigella sonnei Fastq files symlinked to > $input_Ssonn" >> /scratch/phesiqcal/$folder/Symlinks_logs_$folder.txt 
+done
+
+
+# Shigella flexneri ST245
+awk '(FS="\t") {if($9 == "Shigella flexneri" && $2 >= 1000000 && $15 <= 500 && $25 == "245") print $1 } ' QC_summary.txt |
+while read line; 
+do 
+   ln -fs $dir/BaseCalls/$folder/"$line"_*R1_001.fastq.gz $input_Sflex/"$line"_R1.fastq.gz 
+   ln -fs $dir/BaseCalls/$folder/"$line"_*R2_001.fastq.gz $input_Sflex/"$line"_R2.fastq.gz;
+   echo "$current_DateTime -- $folder - "$line" - Shigella sonnei Fastq files symlinked to > $input_Sflex" >> /scratch/phesiqcal/$folder/Symlinks_logs_$folder.txt 
 done
 ) 2> symlink_error_log.txt
 
