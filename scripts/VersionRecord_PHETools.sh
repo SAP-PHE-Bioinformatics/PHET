@@ -8,7 +8,9 @@ current_DateTime=$(date +'%d/%m/%Y  %R')
 echo Date, $current_DateTime 
   
 # echo BACTERIAL WGS RUN ID, $folder
-echo BACTERIAL WGS RUN ID,$folder
+echo Path to raw data,$dir
+
+echo RUN ID,$folder
 
 echo ' '
 
@@ -52,7 +54,8 @@ echo mlst,$MLST,PubMLST_db,v"$MLST_DB_lastupdt"
 # AMRFINDERPLUS
 conda activate amrfinder
 AMRFINDER=$(amrfinder --version)
-echo AMRFinderPlus,$AMRFINDER
+AMRFINDER_db=$(readlink -f /phe/tools/miniconda3/envs/amrfinder/share/amrfinderplus/data/latest/ | cut -f 10 -d "/")
+echo AMRFinderPlus,$AMRFINDER,NCBI,$AMRFINDER_db
 
 # ARIBA
 conda activate seroba
@@ -125,4 +128,5 @@ echo Mykrobe,$MYKROBE,Sonneityping_alleles_DB,$ALLELES_DB
 # TBPROFILER - Mycobacterium tuberuclosis
 conda activate tbprofiler
 TBPROFILER=$(tb-profiler version | cut -f 3 -d " ")
-echo TBProfiler,$TBPROFILER
+TB_DB=$(tb-profiler list_db | awk '{print $2}')
+echo TBProfiler,$TBPROFILER,Tb-profiler_DB,$TB_DB
