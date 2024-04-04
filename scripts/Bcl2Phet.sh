@@ -12,7 +12,7 @@ conda activate phesiqcal
 
 ### Running bcl2fastq
 
-BCL=$(sbatch --job-name bcl2fastq --mem 100G --ntasks 32 --time 960:00:00 -D /phe/tools/phesiqcal/log/ --wrap "bcl2fastq --sample-sheet $input --runfolder-dir $dir --no-lane-splitting --ignore-missing-bcls --ignore-missing-filter --ignore-missing-positions --output-dir $dir/BaseCalls")
+BCL=$(sbatch --job-name bcl2fastq --mem 100G --ntasks 32 --time 960:00:00 -w frgeneseq03 -D /phe/tools/phesiqcal/log/ --wrap "bcl2fastq --sample-sheet $input --runfolder-dir $dir --no-lane-splitting --ignore-missing-bcls --ignore-missing-filter --ignore-missing-positions --output-dir $dir/BaseCalls")
 
 ### Create folder
 folder=$(awk -F ',' 'FNR == 4 {print $2}' $input)
@@ -46,7 +46,7 @@ done
 for i in `ls $dir/BaseCalls/$folder/*.fastq.gz | cut -f 8 -d "/" | cut -f 1 -d "_" | sort -u`
 do 
 	ln -fs $dir/BaseCalls/$folder/"$i"_*R1_001.fastq.gz /scratch/phesiqcal/$folder/input/"$i"_R1.fastq.gz
-  ln -fs $dir/BaseCalls/$folder/"$i"_*R2_001.fastq.gz /scratch/phesiqcal/$folder/input/"$i"_R2.fastq.gz
+	ln -fs $dir/BaseCalls/$folder/"$i"_*R2_001.fastq.gz /scratch/phesiqcal/$folder/input/"$i"_R2.fastq.gz
 done
  
 ### Load phesiqcal module
@@ -64,20 +64,16 @@ JOBID_BCL=${array[3]}
 
 
 ### Running phesiqcal on slurm
-phesiqcal=$(sbatch --dependency=afterok:${JOBID_BCL} --job-name phesiqcal -o slurm-%x-%j.out --mem 100G --ntasks 32 --time 960:00:00 -D /scratch/phesiqcal/$folder/ --wrap "snakemake -j 32 --configfile /scratch/phesiqcal/$folder/config.yaml --snakefile /phe/tools/PHET/scripts/Snakefile_phesiqcal --use-conda")
+phesiqcal=$(sbatch --dependency=afterok:${JOBID_BCL} --job-name phesiqcal -w frgeneseq03 -o slurm-%x-%j.out --mem 100G --ntasks 80 --time 960:00:00 -D /scratch/phesiqcal/$folder/ --wrap "snakemake -j 80 --configfile /scratch/phesiqcal/$folder/config.yaml --snakefile /phe/tools/PHET/scripts/Snakefile_phesiqcal --use-conda")
 
 # Identifying job_id of phesiqcal on slurm
 array=(${phesiqcal// / })
 JOBID_phesiqcal=${array[3]}
 
+# Running shell script to record versions of QC and typing tools + Databases in PHET.
+source /phe/tools/PHET/scripts/VersionRecord_PHETools.sh > /scratch/phesiqcal/$folder/PHETools_Versions_$folder.csv &
 
 # path to the Phet shell script with all the typing tools
 source /phe/tools/PHET/scripts/Start_TypingTools.sh
 
-# Running shell script to record versions of QC and typing tools + Databases in PHET.
-source /phe/tools/PHET/scripts/VersionRecord_PHETools.sh > /scratch/phesiqcal/$folder/PHETools_Versions_$folder.csv &
-
-# path to the shell script to create symlinks of Fastq files to selected pathogen folders
-source /phe/tools/PHET/scripts/Symlinks_runner.sh &
-
-
+# removed the shell script of Symlink_runner.sh 08/03/2024. Ak - replaced by Phylogenetics_runner.sh --> executed via StartTyoingt_tools.sh
