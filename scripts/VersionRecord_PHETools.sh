@@ -1,69 +1,10 @@
 #!/bin/sh
 
-
 source /phe/tools/miniconda3/etc/profile.d/conda.sh
 
-current_DateTime=$(date +'%d/%m/%Y  %R')
-
-echo Date, $current_DateTime 
-  
-# echo BACTERIAL WGS RUN ID, $folder
-echo Path to raw data,$dir
-
-echo RUN ID,$folder
-
-echo ' '
-
-echo 'Pipeline: Bcl2PHET v3.0.0'
-
-echo ' '
-
-echo TOOLS,TOOL_VERSION,DATABASES,DB_VERSION
-
-conda activate phesiqcal
-
-# KRAKEN
-KRAKEN=$(kraken2 --version | head -n 1 | cut -f 3 -d " ")
-KRAKEN_DB=$(basename /scratch/kraken/k2_pluspf_20220607/)
-echo Kraken2,$KRAKEN,Kraken_k2_db,$KRAKEN_DB
-
-# SHOVILL 
-shovill --version | tr " " ","
-
-# PROKKA
-PROKKA=$(grep -e 'my $VERSION' /phe/tools/miniconda3/envs/phesiqcal/bin/prokka | awk -F "$" '{print $2}' | awk -v FS=';' '{print "prokka " $1}' | cut -f 4 -d " " | tr -d '"')
-echo Prokka,$PROKKA
-
-# ABRICATE + Databases
-ABRICATE=$(abricate --version | cut -f 2 -d " ")
-card_dbupdt=$(stat -c %y /phe/tools/miniconda3/envs/phesiqcal/db/card/sequences | cut -d' ' -f 1)
-vfdb_dbupdt=$(stat -c %y /phe/tools/miniconda3/envs/phesiqcal/db/vfdb/sequences | cut -d' ' -f 1)
-plasmidfinder_dbupdt=$(stat -c %y /phe/tools/miniconda3/envs/phesiqcal/db/plasmidfinder/sequences | cut -d' ' -f 1)
-
-echo ABRicate,$ABRICATE,CARD,v"$card_dbupdt"
-echo ABRicate,,VFDB,v"$vfdb_dbupdt"
-echo ABRicate,,PlasmidFinder,v"$plasmidfinder_dbupdt"
-
-# MLST
-conda activate mlst
-MLST=$(mlst --version | cut -f 2 -d " ")
-MLST_DB_lastupdt=$(stat -c %y /phe/tools/miniconda3/envs/mlst/db/pubmlst | cut -f 1 -d " ")
-
-echo mlst,$MLST,PubMLST_db,v"$MLST_DB_lastupdt"
-
-# AMRFINDERPLUS
-conda activate amrfinder
-AMRFINDER=$(amrfinder --version)
-AMRFINDER_db=$(readlink -f /phe/tools/miniconda3/envs/amrfinder/share/amrfinderplus/data/latest/ | cut -f 10 -d "/")
-echo AMRFinderPlus,$AMRFINDER,NCBI,$AMRFINDER_db
-
-# ARIBA
-conda activate seroba
-ARIBA=$(ariba version | head -n 1 | cut -f 2 -d ":")
-echo Ariba,$ARIBA
-
-
 # TYPING TOOLS
+
+echo "TYPING TOOLS"
 
 conda activate phetype
 
@@ -84,7 +25,6 @@ lissero --version | tr " " ","
 
 # MENINGOTYPE - Neisseria meningitidis
 meningotype --version | tr " " ","
-
 
 # LEGSTA - Legionella
 legsta --version | tr " " ","
@@ -129,4 +69,8 @@ echo Mykrobe,$MYKROBE,Sonneityping_alleles_DB,$ALLELES_DB
 conda activate tbprofiler
 TBPROFILER=$(tb-profiler version | cut -f 3 -d " ")
 TB_DB=$(tb-profiler list_db | awk '{print $2}')
-echo TBProfiler,$TBPROFILER,Tb-profiler_DB,$TB_DB
+echo TBProfiler,$TBPROFILER,Tb-profiler_DB,$TB_DB\n
+
+# PASTY - Pseudomonas aeruginosa
+conda activate pasty
+pasty --version 

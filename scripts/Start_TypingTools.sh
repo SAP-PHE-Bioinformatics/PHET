@@ -2,27 +2,33 @@
 
 source /phe/tools/miniconda3/etc/profile.d/conda.sh
 
-
 # Activating phetype environment to run typing tools below.
 conda activate phetype
 
 cd /scratch/phesiqcal/$folder
 
-sbatch --dependency=afterok:${JOBID_phesiqcal} -w frgeneseq03 --job-name ariba_sum -o slurm-%x-%j.out --mem 50G --ntasks 16 --time 960:00:00 -D /scratch/phesiqcal/$folder/ --wrap "snakemake -j 16 --configfile /scratch/phesiqcal/$folder/config.yaml --snakefile /phe/tools/PHET/scripts/Snakefile_Ariba_summary --use-conda --nolock"
+## Making the config file for the typing tools below
+# phet_dir="/scratch/phesiqcal/$folder/PHET"
+# mkdir $phet_dir
+# /phe/tools/PHET/scripts/phet_makefile.sh >> $phet_dir/phet.yaml
 
-# Running amrfinderplus as dependency of phesiqcal for AMR analysis
-amr=$(sbatch --dependency=afterok:${JOBID_phesiqcal} -w frgeneseq03 --job-name amr -o slurm-%x-%j.out --mem 50G --ntasks 24 --time 960:00:00 -D /scratch/phesiqcal/$folder/ --wrap "/phe/tools/PHET/scripts/amrfinder.sh")
 
-#identifying job number of amrfinderplus, to set Shigella typing tools as its dependency.
-array=(${amr// / })
-JOBID_amr=${array[3]}
+## Continuing with remainder analysis
+
+# 11/04/2024 -- removing execution of ariba summary from this script, code added to Snakefile_phesiqcal.
+# sbatch --dependency=afterok:${JOBID_phesiqcal} -w frgeneseq03 --job-name ariba_sum -o slurm-%x-%j.out --mem 50G --ntasks 16 --time 960:00:00 -D /scratch/phesiqcal/$folder/ --wrap "snakemake -j 16 --configfile /scratch/phesiqcal/$folder/config.yaml --snakefile /phe/tools/PHET/scripts/Snakefile_Ariba_summary --use-conda --nolock"
+
+## 11/04/2024 - removed execution of amrfinderplus and its summary, code added to Snakefile_phesiqcal.
+# # Running amrfinderplus as dependency of phesiqcal for AMR analysis
+# amr=$(sbatch --dependency=afterok:${JOBID_phesiqcal} -w frgeneseq03 --job-name amr -o slurm-%x-%j.out --mem 50G --ntasks 24 --time 960:00:00 -D /scratch/phesiqcal/$folder/ --wrap "/phe/tools/PHET/scripts/amrfinder.sh")
+
 
 # Sistr for Salmonella typing
 sistr=$(sbatch --dependency=afterok:${JOBID_phesiqcal} -w frgeneseq03 --job-name sistr -o slurm-%x-%j.out --mem 50G --ntasks 16 --time 960:00:00 -D /scratch/phesiqcal/$folder/ --wrap "snakemake -j 16 --configfile /scratch/phesiqcal/$folder/PHET/phet.yaml --snakefile /phe/tools/PHET/scripts/Snakefile_sistr --use-conda --nolock")
 
-#identifying job id for sistr to set dependency for phylogenetics runner
+#identifying job id for sistr to set dependency for snippy runner in parent runner script
 array=(${sistr// / })
-JOBID_sistr=${array[3]}
+export JOBID_sistr=${array[3]}
 
 # NGmaster and PyngStar for N.Gonorrhoeae typing
 sbatch --dependency=afterok:${JOBID_phesiqcal} -w frgeneseq03 --job-name ngono -o slurm-%x-%j.out --mem 50G --ntasks 16 --time 960:00:00 -D /scratch/phesiqcal/$folder/ --wrap "snakemake -j 16 --configfile /scratch/phesiqcal/$folder/PHET/phet.yaml --snakefile /phe/tools/PHET/scripts/Snakefile_ngono --use-conda --nolock"
@@ -55,7 +61,7 @@ sbatch --dependency=afterok:${JOBID_phesiqcal} -w frgeneseq03 --job-name pasty -
 sbatch --dependency=afterok:${JOBID_phesiqcal} -w frgeneseq03 --job-name clermonT -o slurm-%x-%j.out --mem 50G --ntasks 16 --time 01:00:00 -D /scratch/phesiqcal/$folder/ --wrap "/phe/tools/PHET/scripts/Clermont_runner.sh"
 
 # ShigeiFinder and Shigatyper for Shigella
-shigella=$(sbatch --dependency=afterok:${JOBID_amr} -w frgeneseq03 --job-name shigella -o slurm-%x-%j.out --mem 50G --ntasks 16 --time 960:00:00 -D /scratch/phesiqcal/$folder/ --wrap "snakemake -j 16 --configfile /scratch/phesiqcal/$folder/PHET/phet.yaml --snakefile /phe/tools/PHET/scripts/Snakefile_shigella --latency-wait 120 --use-conda --nolock")
+shigella=$(sbatch --dependency=afterok:${JOBID_phesiqcal} -w frgeneseq03 --job-name shigella -o slurm-%x-%j.out --mem 50G --ntasks 16 --time 960:00:00 -D /scratch/phesiqcal/$folder/ --wrap "snakemake -j 16 --configfile /scratch/phesiqcal/$folder/PHET/phet.yaml --snakefile /phe/tools/PHET/scripts/Snakefile_shigella --latency-wait 120 --use-conda --nolock")
 
 #identifying job number of shigatyper/shigeifinder, to set Sonneityping tools as its dependency.
 array=(${shigella// / })
@@ -66,4 +72,4 @@ sbatch --dependency=afterok:${JOBID_shigella} -w frgeneseq03 --job-name sonneity
 
 
 ## RUNNING SNIPPY RUNNER - Symlinks and runs snippy for selected pathogens - dependent on completion of sistr for Salmonella.
-sbatch --dependency=afterok:${JOBID_sistr} -w frgeneseq03 --job-name snippy -o slurm-%x-%j.out --mem 50G --ntasks 16 --time 960:00:00 -D /scratch/phesiqcal/$folder/ --wrap "/phe/tools/PHET/scripts/Snippy_runner.sh /scratch/phesiqcal/$folder/PHETools_Versions_$folder.csv"
+# sbatch --dependency=afterok:${JOBID_sistr} -w frgeneseq03 --job-name snippy -o slurm-%x-%j.out --mem 50G --ntasks 16 --time 960:00:00 -D /scratch/phesiqcal/$folder/ --wrap "/phe/tools/PHET/scripts/Snippy_runner.sh /scratch/phesiqcal/$folder/PHETools_Versions_$folder.csv"
