@@ -27,5 +27,6 @@ awk 'BEGIN {print "legionella:"}; (FS="\t") {if($9 ~/Legionella/ && $2 >= 100000
 
 awk 'BEGIN {print "paeruginosa:"}; (FS="\t") {if($9 == "Pseudomonas aeruginosa" && $2 >= 1000000 && $15 <= 500 ) print "- " $1 }' QC_summary.txt
 
+awk 'BEGIN {print "saureus:"}; (FS="\t") {if($9 == "Staphylococcus aureus" && $2 >= 1000000 && $15 <= 500 ) print "- " $1 }' QC_summary.txt
 
 

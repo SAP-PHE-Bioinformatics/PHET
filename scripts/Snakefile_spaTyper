@@ -1,0 +1,38 @@
+configfile: "phet.yaml"
+
+
+rule all:
+    input:
+        expand("PHET/Staphylococcus_aureus/spaTyper/{sample}_spaTyper.tab", sample=config["saureus"]),
+        "PHET/Staphylococcus_aureus/spaTyper/Summary_spaTyper.tab"
+
+
+rule spaTyper:
+    input: 
+        "filtered_contigs/{sample}.fna"
+    output: 
+        "PHET/Staphylococcus_aureus/spaTyper/{sample}_spaTyper.tab"
+    conda:
+        "staphopia-sccmec"
+    shell:
+        "spaTyper -f {input} --output {output}"
+
+
+rule spaTyper_sum:
+    input:
+        files = expand("PHET/Staphylococcus_aureus/spaTyper/{sample}_spaTyper.tab", sample=config["saureus"])
+    output:
+        "PHET/Staphylococcus_aureus/spaTyper/Summary_spaTyper.tab"
+    run:
+        import pandas as pd
+        import pathlib as pb
+        dfs = []
+        sfiles = f"{input}".split()
+        for file in sfiles:
+            spaTyper = pb.Path(file)
+            df = pd.read_csv(spaTyper, sep = "\t")
+            df.insert(0, "Accession", spaTyper.parts[3])
+            df["Accession"] = df["Accession"].str.replace("_spaTyper.tab", "")
+            dfs.append(df)
+        summary_table = pd.concat(dfs)
+        summary_table.to_csv(output[0], sep='\t', index=False)

@@ -4,7 +4,7 @@ source /phe/tools/miniconda3/etc/profile.d/conda.sh
 
 # TYPING TOOLS
 
-echo "TYPING TOOLS"
+# echo "TYPING TOOLS"
 
 conda activate phetype
 
@@ -74,3 +74,10 @@ echo TBProfiler,$TBPROFILER,Tb-profiler_DB,$TB_DB\n
 # PASTY - Pseudomonas aeruginosa
 conda activate pasty
 pasty --version 
+
+# Staphopia and SpaTyper - Staphylococcus aureus
+conda activate staphopia-sccmec
+staphopia=$(staphopia-sccmec --version | tr " " ",")
+spatyper=$(spaTyper --version | tr " " ",")
+echo $staphopia
+echo $spatyper

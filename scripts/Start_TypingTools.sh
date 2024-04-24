@@ -70,6 +70,8 @@ JOBID_shigella=${array[3]}
 # Mykrobe Sonneityping
 sbatch --dependency=afterok:${JOBID_shigella} -w frgeneseq03 --job-name sonneityping -o slurm-%x-%j.out --mem 50G --ntasks 16 --time 960:00:00 -D /scratch/phesiqcal/$folder/ --wrap "snakemake -j 16 --configfile /scratch/phesiqcal/$folder/PHET/phet.yaml --snakefile /phe/tools/PHET/scripts/Snakefile_sonneityping --latency-wait 120 --use-conda --nolock"
 
+# Staphylococcus aureus
+sbatch --dependency=afterok:${JOBID_phesiqcal} -w frgeneseq03 --job-name staphopia -o slurm-%x-%j.out --mem 50G --ntasks 16 --time 960:00:00 -D /scratch/phesiqcal/$folder/ --wrap "snakemake -j 16 --configfile /scratch/phesiqcal/$folder/PHET/phet.yaml --snakefile /phe/tools/PHET/scripts/Snakefile_staphopia --use-conda --nolock"
 
 ## RUNNING SNIPPY RUNNER - Symlinks and runs snippy for selected pathogens - dependent on completion of sistr for Salmonella.
 # sbatch --dependency=afterok:${JOBID_sistr} -w frgeneseq03 --job-name snippy -o slurm-%x-%j.out --mem 50G --ntasks 16 --time 960:00:00 -D /scratch/phesiqcal/$folder/ --wrap "/phe/tools/PHET/scripts/Snippy_runner.sh /scratch/phesiqcal/$folder/PHETools_Versions_$folder.csv"
