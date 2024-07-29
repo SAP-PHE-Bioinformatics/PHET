@@ -24,7 +24,9 @@ echo "PyngSTar (Last modified date of script)",v"$PYNGSTAR",ngstar_DB,$pyngSTarD
 lissero --version | tr " " ","
 
 # MENINGOTYPE - Neisseria meningitidis
-meningotype --version | tr " " ","
+MENINGO=$(meningotype --version | tr " " ",")
+MENINGODB=$(stat -c %y /phe/tools/miniconda3/envs/phetype/lib/python3.6/site-packages/meningotype/db/ | cut -f1 -d " ")
+echo $MENINGO,allele_db_pubMLST,$MENINGODB
 
 # LEGSTA - Legionella
 legsta --version | tr " " ","
@@ -44,9 +46,11 @@ emmtyper --version | tr " " ","
 # SEROBA - Streptococcus pneumoniae
 conda activate seroba
 SEROBA=$(seroba version)
-echo SeroBA,$SEROBA
+serobdb=$(basename /phe/tools/seroba/database_20240709/)
+echo SeroBA,$SEROBA,ctvdb,$serobdb
 
 # SEROCALL - Streptococcus pneumoniae
+conda activate serocall
 SEROCALL=$(grep -n SeroCallv /phe/tools/SeroCall/serocall.py | cut -d "=" -f 2 | awk -v FS='\' '{print $1}')
 echo SeroCall,$SEROCALL
 
@@ -66,7 +70,7 @@ ALLELES_DB=$(basename /phe/tools/sonneityping/versions/alleles_20210201.txt | cu
 echo Mykrobe,$MYKROBE,Sonneityping_alleles_DB,$ALLELES_DB
 
 # TBPROFILER - Mycobacterium tuberuclosis
-conda activate tbprofiler
+conda activate tbprofiler_v6.2
 TBPROFILER=$(tb-profiler version | cut -f 3 -d " ")
 TB_DB=$(tb-profiler list_db | awk '{print $2}')
 echo TBProfiler,$TBPROFILER,Tb-profiler_DB,$TB_DB\n
