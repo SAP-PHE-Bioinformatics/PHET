@@ -1,0 +1,82 @@
+configfile : "phet.yaml"
+
+# date varaible for file name
+import datetime
+date_today = datetime.datetime.today().strftime('%Y%m%d')
+MID = config["RunID"]
+
+
+if config["ecoli"]:
+    rule all:
+        input:
+            "PHET/Escherichia/ECTyper/output.tsv",
+            expand("PHET/Escherichia/ClermonTyping_{date}/ClermonTyping_{date}_phylogroups.txt", date=date_today),
+            expand("PHET/Escherichia/{MID_ID}_Ecoli_WGS_result_summary.tsv", MID_ID=MID)
+
+
+if config["ecoli"]:
+    rule ectyper:
+        input:
+            "filtered_contigs/"
+        output:
+            "PHET/Escherichia/ECTyper/output.tsv"
+        params: 
+            ec_dir = "PHET/Escherichia/ECTyper/"
+        conda:
+            "phetype"
+        shell:
+            "ectyper -i {input} -o {params.ec_dir}" 
+          
+
+
+if config["ecoli"]:
+    rule clermontyping:
+        input: 
+            "QC_summary.txt"
+        output:
+            expand("PHET/Escherichia/ClermonTyping_{date}/ClermonTyping_{date}_phylogroups.txt", date=date_today)
+        conda:
+            "phetype"
+        shell:
+            "/phe/tools/PHET/scripts/Clermont_runner.sh"
+
+
+if config["ecoli"]:
+    rule report_sum:
+        input:
+            QC_summary = "QC_summary.txt",
+            vir_genes = "virulome.tab",
+            ECTyper = "PHET/Escherichia/ECTyper/output.tsv",
+            Clermont = expand("PHET/Escherichia/ClermonTyping_{date}/ClermonTyping_{date}_phylogroups.txt", date=date_today)
+        output:
+            run_report = expand("PHET/Escherichia/{MID_ID}_Ecoli_WGS_result_summary.tsv", MID_ID=MID)
+            # ongoing_file = "/phe/micro/Escherichia/SAP_Ongoing_Ecoli_compiled_WGS_results.tsv" # hard-coded inside the python script due to issues with snakemake overwriting the file.
+        params:
+            runid = config["RunID"]
+        shell:
+            "python /phe/tools/PHET/scripts/Ecoli_result_summary.py --mid {params.runid} --qc {input.QC_summary} --vir {input.vir_genes} --ec {input.ECTyper} --cl {input.Clermont} --out {output.run_report}"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+               
+
+
