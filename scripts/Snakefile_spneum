@@ -30,7 +30,7 @@ if config["spneumoniae"]:
              shell:
                  """
                  rm -r {params.name}
-                 seroba runSerotyping /phe/tools/seroba/database {input.r1} {input.r2} {params.name}
+                 seroba runSerotyping /phe/tools/seroba/database_20240709 {input.r1} {input.r2} {params.name}
                  """
 
 #SeroCall
