@@ -11,7 +11,7 @@ outdir=ClermonTyping_$current_Date
 
 
 # Selecting the assembled contigs for e.coli, filtered by quality and species match, and printing pathway to the contigs spearated by @ as per clermont tool requirement. 
-fastafiles=$(awk '(FS="\t") {if($9 ~/Escherichia/ && $11 !~/Shigella/ && $2 >= 1000000 && $15 <= 500 ) print $1 } ' QC_summary.txt | while read line; do ls -p filtered_contigs/"$line".fna | tr '\n' '@' ; done | sed '1h;1!H;$!d;g;s/\(.*\)@/\1/')
+fastafiles=$(awk '(FS="\t") {if($9 ~/Escherichia/ && $2 >= 1000000 && $15 <= 500 ) print $1 } ' QC_summary.txt | while read line; do ls -p filtered_contigs/"$line".fna | tr '\n' '@' ; done | sed '1h;1!H;$!d;g;s/\(.*\)@/\1/')
 
 ## running ClermoTyping on above selected fasta files. 
 /phe/tools/ClermonTyping/clermonTyping.sh --fasta $fastafiles --name $outdir
