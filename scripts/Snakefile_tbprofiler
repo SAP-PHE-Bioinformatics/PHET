@@ -19,6 +19,6 @@ if config["tuberculosis"]:
               name = "{sample}",
               threads = 4 
          conda:
-              "tbprofiler"
+              "tbprofiler_v6.2"
          shell: 
               "tb-profiler profile -1 {input.R1} -2 {input.R2} --csv -p {params.name} --dir /scratch/bacterial_pathogens/Mycobacterium/tuberculosis/tb_profiler/ -t {params.threads}"
