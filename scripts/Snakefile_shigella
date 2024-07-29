@@ -18,7 +18,7 @@ if config["shigella"]:
              "PHET/Shigella/Summary_Shigatyper.tsv",
              expand("PHET/Shigella/ShigeiFinder/{sample}.tsv", sample=config["shigella"]),
              "PHET/Shigella/Summary_ShigeiFinder.tsv",
-             "PHET/Shigella/Shigella_flexneri_report_summary.tsv"
+             "PHET/Shigella/Shigella_report_summary.tsv"
 
 ### SHIGATYPER ###           
 
@@ -141,7 +141,7 @@ if config["shigella"]:
                shigfinder = "PHET/Shigella/Summary_ShigeiFinder.tsv",
                shigtyper = "PHET/Shigella/Summary_Shigatyper.tsv"
           output:
-               S_flexneri = "PHET/Shigella/Shigella_flexneri_report_summary.tsv"
+               S_flexneri = "PHET/Shigella/Shigella_report_summary.tsv"
           run:
                import pandas as pd
                import numpy as np
@@ -198,7 +198,7 @@ if config["shigella"]:
                     Output_df = pd.merge(Output_df, i, on='#Accession', how='inner')
                # Removing any Shigella sonnei, removing any columns with all NA values
                # Inserting Genomic QC column to include pass or fail criteria based on QC conditions
-               Output_df = Output_df[~Output_df['#1 Match'].str.contains("sonnei")]
+               # Output_df = Output_df[~Output_df['#1 Match'].str.contains("sonnei")] <-- 29/04/24 - removing this because if only sonnei, then no dataframe gets created.
                Output_df.dropna(axis=1, how='all', inplace = True)
                Output_df.insert(1, 'Genomic QC', '')
                Output_df['Genomic QC']=np.where((Output_df['Reads']>= 1000000) & (Output_df['contigs']<= 500) & (Output_df['AvgQual'] >= 30), 'PASS', 'FAIL' )
