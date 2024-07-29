@@ -7,7 +7,7 @@ if config["meningitidis"]:
       rule all:
             input:
                   "PHET/Neisseria/meningitidis/meningotype.txt",
-                  expand("PHET/Neisseria/meningitidis/contigs/{sample}.fna", sample=config["meningitidis"]),
+                  directory("PHET/Neisseria/meningitidis/contigs/"),
                   directory("PHET/Neisseria/meningitidis/characterize_neisseria_capsule_results/")
 
 if config["meningitidis"]:
@@ -27,12 +27,13 @@ if config["meningitidis"]:
             input:
                   expand("filtered_contigs/{sample}.fna", sample=config["meningitidis"])
             output:
-                  "PHET/Neisseria/meningitidis/contigs/{sample}.fna"
+                  directory("PHET/Neisseria/meningitidis/contigs/")
             conda:
                   "phetype"
             shell:
                   """
-                  cp {input} PHET/Neisseria/meningitidis/contigs/
+                  mkdir {output}
+                  cp {input} {output}
                   """
 
 
