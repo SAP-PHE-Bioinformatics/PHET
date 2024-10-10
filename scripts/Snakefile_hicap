@@ -1,0 +1,25 @@
+configfile: "phet.yaml"
+
+# analysis_date = datetime.date.today().strftime("%Y%m%d")
+
+if config["hinfluenzae"]:
+    rule all:
+        input:
+             expand("PHET/Haemophilus_influenzae/{sample}_hicap.txt", sample=config["hinfluenzae"])
+
+
+if config["hinfluenzae"]:
+    rule hicap:
+        input:
+            "filtered_contigs/{sample}.fna" 
+        output:
+            "PHET/Haemophilus_influenzae/{sample}_hicap.txt"
+        params:
+            out_dir = "PHET/Haemophilus_influenzae/"
+        conda:
+            "hicap"
+        shell:
+            """
+            mkdir -p {params.out_dir}
+            hicap -q {input} -o {params.out_dir} 2>&1 | tee {output}
+            """
