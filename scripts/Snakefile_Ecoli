@@ -21,11 +21,12 @@ if config["ecoli"]:
         output:
             "PHET/Escherichia/ECTyper/output.tsv"
         params: 
-            ec_dir = "PHET/Escherichia/ECTyper/"
+            ec_dir = "PHET/Escherichia/ECTyper/",
+            threshold = "70"
         conda:
             "phetype"
         shell:
-            "ectyper -i {input} -o {params.ec_dir}" 
+            "ectyper -opid {params.threshold} -hpid {params.threshold} -opcov {params.threshold} -hpcov {params.threshold} -i {input} -o {params.ec_dir}" 
           
 
 
