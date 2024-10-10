@@ -80,6 +80,7 @@ if config["Ssonnei"]:
                   st = "mlst.tab",
                   resist = "resistome.tab",
                   amr = "amrfinder_summary.tsv",
+                  shigfinder = "PHET/Shigella/Summary_ShigeiFinder.tsv",
                   shigtyper = "PHET/Shigella/Summary_Shigatyper.tsv",
                   mykrobe = "PHET/Shigella/mykrobe_parsed_predictResults.tsv"
 
@@ -125,6 +126,11 @@ if config["Ssonnei"]:
                   amrfinder.insert(1, "AMRFP_Count", amrfinder.count(axis=1), True)
                   amrfinder['AMRFP_Count'] = amrfinder['AMRFP_Count']-1
                   amrfinder['#Accession'] = amrfinder['#Accession'].astype(str)
+                  # reading and formatting shigeifinder results
+                  shfinder = pd.read_csv(f"{input.shigfinder}", sep ='\t')
+                  shfinder = shfinder.rename({'SAMPLE ID': '#Accession', 'SEROTYPE': 'ShigeiFinder Serotype Prediction'}, axis =1)
+                  shfinder['#Accession'] = shfinder['#Accession'].astype(str)
+                  shfinder = shfinder.iloc[:,[0,4,3,1,2,5,6,7]]
                   # reading and formatting shigatyper data
                   shtyper = pd.read_csv(f"{input.shigtyper}", sep='\t')
                   shtyper = shtyper.rename({'Sample': '#Accession', 'Prediction' : 'ShigaTyper Prediction'}, axis =1)
@@ -137,7 +143,7 @@ if config["Ssonnei"]:
                   sonnei['#Accession'] = sonnei['#Accession'].astype(str)
 
                   # Creating final output file by merge
-                  all_files = [sp, mlst, shtyper, sonnei, resistome, amrfinder]
+                  all_files = [sp, mlst, shfinder, shtyper, sonnei, resistome, amrfinder]
 
                   # merging two files first
                   Output_df = pd.merge(seqdata, denovo, on='#Accession', how='inner')
