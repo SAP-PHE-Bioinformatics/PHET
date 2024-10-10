@@ -1,26 +1,15 @@
 #!/bin/sh
 
+scratchdir=${1?Error: Require path to the MID folder}
+
 source /phe/tools/miniconda3/etc/profile.d/conda.sh
 
 # Activating phetype environment to run typing tools below.
 conda activate phetype
 
-cd /scratch/phesiqcal/$folder
+cd $scratchdir
 
-## Making the config file for the typing tools below
-# phet_dir="/scratch/phesiqcal/$folder/PHET"
-# mkdir $phet_dir
-# /phe/tools/PHET/scripts/phet_makefile.sh >> $phet_dir/phet.yaml
-
-
-## Continuing with remainder analysis
-
-# 11/04/2024 -- removing execution of ariba summary from this script, code added to Snakefile_phesiqcal.
-# sbatch --dependency=afterok:${JOBID_phesiqcal} --exclude=frgeneseq-control --nodelist=frgeneseq03 --nodes=1 --job-name ariba_sum -o slurm-%x-%j.out --mem 50G --ntasks 16 --time 960:00:00 -D /scratch/phesiqcal/$folder/ --wrap "snakemake -j 16 --configfile /scratch/phesiqcal/$folder/config.yaml --snakefile /phe/tools/PHET/scripts/Snakefile_Ariba_summary --use-conda --nolock"
-
-## 11/04/2024 - removed execution of amrfinderplus and its summary, code added to Snakefile_phesiqcal.
-# # Running amrfinderplus as dependency of phesiqcal for AMR analysis
-# amr=$(sbatch --dependency=afterok:${JOBID_phesiqcal} --exclude=frgeneseq-control --nodelist=frgeneseq03 --nodes=1 --job-name amr -o slurm-%x-%j.out --mem 50G --ntasks 24 --time 960:00:00 -D /scratch/phesiqcal/$folder/ --wrap "/phe/tools/PHET/scripts/amrfinder.sh")
+folder=$(basename $scratchdir)
 
 
 # Sistr for Salmonella typing
@@ -74,7 +63,16 @@ JOBID_shigella=${array[3]}
 sbatch --dependency=afterok:${JOBID_shigella} --exclude=frgeneseq-control --nodelist=frgeneseq03 --nodes=1 --job-name sonneityping -o slurm-%x-%j.out --mem 50G --ntasks 16 --time 960:00:00 -D /scratch/phesiqcal/$folder/ --wrap "snakemake -j 16 --configfile /scratch/phesiqcal/$folder/PHET/phet.yaml --snakefile /phe/tools/PHET/scripts/Snakefile_sonneityping --latency-wait 120 --use-conda --nolock"
 
 # Staphylococcus aureus
-sbatch --dependency=afterok:${JOBID_phesiqcal} --exclude=frgeneseq-control --nodelist=frgeneseq03 --nodes=1 --job-name staphopia -o slurm-%x-%j.out --mem 50G --ntasks 16 --time 960:00:00 -D /scratch/phesiqcal/$folder/ --wrap "snakemake -j 16 --configfile /scratch/phesiqcal/$folder/PHET/phet.yaml --snakefile /phe/tools/PHET/scripts/Snakefile_saureus --use-conda --nolock"
+sbatch --dependency=afterok:${JOBID_phesiqcal} --exclude=frgeneseq-control --nodelist=frgeneseq03 --nodes=1 --job-name saureus -o slurm-%x-%j.out --mem 50G --ntasks 16 --time 960:00:00 -D /scratch/phesiqcal/$folder/ --wrap "snakemake -j 16 --configfile /scratch/phesiqcal/$folder/PHET/phet.yaml --snakefile /phe/tools/PHET/scripts/Snakefile_saureus --use-conda --nolock"
 
 ## RUNNING SNIPPY RUNNER - Symlinks and runs snippy for selected pathogens - dependent on completion of sistr for Salmonella.
 # sbatch --dependency=afterok:${JOBID_sistr} --exclude=frgeneseq-control --nodelist=frgeneseq03 --nodes=1 --job-name snippy -o slurm-%x-%j.out --mem 50G --ntasks 16 --time 960:00:00 -D /scratch/phesiqcal/$folder/ --wrap "/phe/tools/PHET/scripts/Snippy_runner.sh /scratch/phesiqcal/$folder/PHETools_Versions_$folder.csv"
+
+# MASH for Mycobacterium abscessus
+sbatch --dependency=afterok:${JOBID_phesiqcal} --exclude=frgeneseq-control --nodelist=frgeneseq03 --nodes=1 --job-name mash_mabs -o slurm-%x-%j.out --mem 50G --ntasks 16 --time 960:00:00 -D /scratch/phesiqcal/$folder/ --wrap "snakemake -j 16 --configfile /scratch/phesiqcal/$folder/PHET/phet.yaml --snakefile /phe/tools/PHET/scripts/Snakefile_mash_mabs --use-conda --nolock"
+
+# MASH for Mycobacterium intracellulare
+sbatch --dependency=afterok:${JOBID_phesiqcal} --exclude=frgeneseq-control --nodelist=frgeneseq03 --nodes=1 --job-name mash_maic -o slurm-%x-%j.out --mem 50G --ntasks 16 --time 960:00:00 -D /scratch/phesiqcal/$folder/ --wrap "snakemake -j 16 --configfile /scratch/phesiqcal/$folder/PHET/phet.yaml --snakefile /phe/tools/PHET/scripts/Snakefile_mash_maic --use-conda --nolock"
+
+# HiCap for Haemophilus Influenzae
+sbatch --dependency=afterok:${JOBID_phesiqcal} --exclude=frgeneseq-control --nodelist=frgeneseq03 --nodes=1 --job-name hicap -o slurm-%x-%j.out --mem 50G --ntasks 16 --time 960:00:00 -D /scratch/phesiqcal/$folder/ --wrap "snakemake -j 16 --configfile /scratch/phesiqcal/$folder/PHET/phet.yaml --snakefile /phe/tools/PHET/scripts/Snakefile_hicap --use-conda --nolock"
