@@ -1,0 +1,24 @@
+# configfile
+
+configfile: "phet.yaml"
+
+
+if config["m_abscessus"]:
+    rule all:
+        input:
+            expand("PHET/Mycobacterium/abscessus/{sample}_mash_dist.tab", sample=config["m_abscessus"])
+
+
+
+if config["m_abscessus"]:
+    rule mash_mabs:
+        input:
+            "filtered_contigs/{sample}.fna"
+        output:
+            "PHET/Mycobacterium/abscessus/{sample}_mash_dist.tab"
+        params:
+            ref = "/phe/micro/References/Mycobacterium_abscessus/mash/reference.msh"
+        conda:
+            "phesiqcal"
+        shell:
+            "mash dist {params.ref} {input} | sort -gk3 > {output}"

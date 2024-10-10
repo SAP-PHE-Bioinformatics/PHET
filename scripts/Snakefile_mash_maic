@@ -1,0 +1,23 @@
+# configfile
+
+configfile: "phet.yaml"
+
+
+if config["m_intracellulare"]:
+    rule all:
+        input:
+            expand("PHET/Mycobacterium/intracellulare/{sample}_mash_dist.tab", sample=config["m_intracellulare"])
+
+
+if config["m_intracellulare"]:
+    rule mash_maic:
+        input:
+            "filtered_contigs/{sample}.fna"
+        output:
+            "PHET/Mycobacterium/intracellulare/{sample}_mash_dist.tab"
+        params:
+            ref = "/phe/micro/References/Mycobacterium_avium_intracellulare/mash/reference.msh"
+        conda:
+            "phesiqcal"
+        shell:
+            "mash dist {params.ref} {input} | sort -gk3 > {output}"
