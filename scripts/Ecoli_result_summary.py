@@ -139,11 +139,16 @@ report_df = report_df.sort_values(by=['Accession ID', 'all_stx_nil'])
 print("Printing True/False for whether an Accession has no stx genes: ")
 print(report_df[['Accession ID', 'all_stx_nil']])
 
-# Dropping duplicates based on Accession ID, keeping the first occurrence (which is NOT all nil i.e. ".")
-# Then dropping the helper boolean column, adding analysis date and resetting the index of final dataframe
-report_df = report_df.drop_duplicates(subset='Accession ID', keep='first')
+# # Dropping duplicates based on Accession ID, keeping the first occurrence (which is NOT all nil i.e. ".")
+# # Then dropping the helper boolean column, adding analysis date and resetting the index of final dataframe
+# report_df = report_df.drop_duplicates(subset='Accession ID', keep='first')
 report_df = report_df.drop(columns=['all_stx_nil'])
-report_df = report_df.reset_index(drop=True)
+# report_df = report_df.reset_index(drop=True)
+
+# Sorting the dataframe by length of string in Seq_ID column to keep non-STEC E.coli at the bottom of list for easy sorting
+report_df.index = report_df['Seq_ID'].str.len()
+report_df = report_df.sort_index(ascending=False).reset_index(drop=True)
+
 # report_df.loc[;, 'Analysis Date'] = current_date
 print("Final data for reporting (Without multiple isolates for an Accession)")
 print(report_df)
