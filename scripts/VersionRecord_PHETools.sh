@@ -85,3 +85,13 @@ staphopia=$(staphopia-sccmec --version | tr " " ",")
 spatyper=$(spaTyper --version | tr " " ",")
 echo $staphopia
 echo $spatyper
+
+# Mash - MABS and MAIC
+conda activate phesiqcal
+MASH=$(mash --version )
+echo Mash,$MASH
+
+# Hi-Cap for Haemophilus Influenzae
+conda activate hicap
+hicap=$(hicap -v | tr " " ",")
+echo $hicap
