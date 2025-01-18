@@ -91,7 +91,17 @@ conda activate phesiqcal
 MASH=$(mash --version )
 echo Mash,$MASH
 
+# Choleraetyper for Vibrio cholerae
+ABRICATE=$(abricate --version | cut -f 2 -d " ")
+cholerae_dbupdt=$(stat -c %y /phe/tools/miniconda3/envs/phesiqcal/db/choleraetyper/sequences | cut -d' ' -f 1)
+echo "ABRicate,$ABRICATE,CholeraeTyper,$cholerae_dbupdt"
+
 # Hi-Cap for Haemophilus Influenzae
 conda activate hicap
 hicap=$(hicap -v | tr " " ",")
 echo $hicap
+
+# Kleborate for Klebsiella species
+conda activate test
+Kleborate=$(kleborate --version | tr " " ",")
+echo $Kleborate
