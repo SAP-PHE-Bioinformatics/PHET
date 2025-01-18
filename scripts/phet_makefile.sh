@@ -50,3 +50,8 @@ awk 'BEGIN {print "saureus:"}; (FS="\t") {if($9 == "Staphylococcus aureus" && $2
 
 awk 'BEGIN {print "hinfluenzae:"}; (FS="\t") {if($9 == "Haemophilus influenzae" && $2 >= 1000000 && $15 <= 500 ) print "- " $1 }' "$QC_FILE"
 
+awk 'BEGIN {print "Sagalactiae:"}; (FS="\t") {if($9 == "Streptococcus agalactiae" && $2 >= 800000 && $15 <= 500 ) print "- " $1 }' "$QC_FILE"
+
+awk 'BEGIN {print "Vcholerae:"}; (FS="\t") {if($9 == "Vibrio cholerae" && $2 >= 1000000 && $15 <= 500 ) print "- " $1 }' "$QC_FILE"
+
+awk 'BEGIN {print "Klebsiella:"}; (FS="\t") {if($9 ~/Klebsiella/ && $2 >= 1000000 && $15 <= 500 ) print "- " $1 }' "$QC_FILE"
