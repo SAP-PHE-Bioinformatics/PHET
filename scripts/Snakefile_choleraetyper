@@ -1,0 +1,21 @@
+configfile: "phet.yaml"
+
+if config["Vcholerae"]:
+    rule all:
+        input:
+            expand("PHET/Vibrio/cholerae/{sample}_choleraetyper.txt", sample=config["Vcholerae"])
+
+if config["Vcholerae"]:
+    rule choleraetyper:
+        input: 
+            "filtered_contigs/{sample}.fna"
+        output: 
+            "PHET/Vibrio/cholerae/{sample}_choleraetyper.txt"
+        conda:
+            "phesiqcal"
+        params:
+            id_pct = "100",
+            cov_pct = "100"
+        log: "PHET/Vibrio/cholerae/{sample}_log.txt"
+        shell:
+            "abricate --db choleraetyper --minid {params.id_pct} --mincov {params.cov_pct} {input} > {log} 2>&1 > {output}"

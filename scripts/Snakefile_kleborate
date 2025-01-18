@@ -1,0 +1,18 @@
+configfile: "phet.yaml"
+
+if config["Klebsiella"]:
+    rule all:
+        input:
+            expand("PHET/Klebsiella/Kleborate/{sample}_kleborate.tsv", sample=config["Klebsiella"])
+
+
+if config["Klebsiella"]:
+    rule kleborate:
+        input:
+            "filtered_contigs/{sample}.fna"
+        output: 
+            "PHET/Klebsiella/Kleborate/{sample}_kleborate.tsv"
+        conda:
+            "test"
+        shell:
+            "kleborate -a {input} --all -o {output}"

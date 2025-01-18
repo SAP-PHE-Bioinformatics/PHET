@@ -1,0 +1,20 @@
+## Typing for Streptococcus agalactiae
+
+configfile: "phet.yaml"
+
+if config["Sagalactiae"]:
+    rule all:
+        input:
+            expand("PHET/Streptococcus/S_agalactiae/{sample}_gbs.tab", sample=config["Sagalactiae"])
+
+
+if config["Sagalactiae"]:
+    rule abricate_gbs:
+        input:
+            "filtered_contigs/{sample}.fna"
+        output:
+            "PHET/Streptococcus/S_agalactiae/{sample}_gbs.tab"
+        conda:
+            "phesiqcal"
+        shell:
+            "abricate --db GBS {input} > {output}"

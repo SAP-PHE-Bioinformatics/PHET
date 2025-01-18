@@ -22,7 +22,7 @@ if config["ecoli"]:
             "PHET/Escherichia/ECTyper/output.tsv"
         params: 
             ec_dir = "PHET/Escherichia/ECTyper/",
-            threshold = "70"
+            threshold = "50"
         conda:
             "phetype"
         shell:
@@ -56,28 +56,4 @@ if config["ecoli"]:
             runid = config["RunID"]
         shell:
             "python /phe/tools/PHET/scripts/Ecoli_result_summary.py --mid {params.runid} --qc {input.QC_summary} --vir {input.vir_genes} --ec {input.ECTyper} --cl {input.Clermont} --out {output.run_report}"
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-
-
-
-
-
-               
-
 
