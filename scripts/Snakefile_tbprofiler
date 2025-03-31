@@ -1,11 +1,17 @@
 configfile: "phet.yaml"
 
+import datetime
+date_today = datetime.datetime.today().strftime('%Y%m%d')
+
+# FORMATS=["txt", "csv"]
 
 if config["tuberculosis"]:
     rule all:
          input:
-              expand("/scratch/bacterial_pathogens/Mycobacterium/tuberculosis/tb_profiler/results/{sample}.results.csv", sample=config["tuberculosis"]),
-              expand("/scratch/bacterial_pathogens/Mycobacterium/tuberculosis/tb_profiler/results/{sample}.results.json", sample=config["tuberculosis"])
+              expand("PHET/Mycobacterium/tuberculosis/results/{sample}.results.csv", sample=config["tuberculosis"]),
+              expand("PHET/Mycobacterium/tuberculosis/results/{sample}.results.json", sample=config["tuberculosis"]),
+              expand("PHET/Mycobacterium/tuberculosis/{MID_run}_tbprofiler_summary.txt", MID_run=config["RunID"])
+
 
 if config["tuberculosis"]:
     rule tbprofiler:
@@ -13,12 +19,28 @@ if config["tuberculosis"]:
              R1 = "input/{sample}_R1.fastq.gz",
              R2 = "input/{sample}_R2.fastq.gz"
          output: 
-             "/scratch/bacterial_pathogens/Mycobacterium/tuberculosis/tb_profiler/results/{sample}.results.csv",
-             "/scratch/bacterial_pathogens/Mycobacterium/tuberculosis/tb_profiler/results/{sample}.results.json"
+             "PHET/Mycobacterium/tuberculosis/results/{sample}.results.csv",
+             "PHET/Mycobacterium/tuberculosis/results/{sample}.results.json"
          params:
               name = "{sample}",
               threads = 4 
          conda:
               "tbprofiler_v6.2"
          shell: 
-              "tb-profiler profile -1 {input.R1} -2 {input.R2} --csv -p {params.name} --dir /scratch/bacterial_pathogens/Mycobacterium/tuberculosis/tb_profiler/ -t {params.threads}"
+              "tb-profiler profile -1 {input.R1} -2 {input.R2} --csv -p {params.name} --dir PHET/Mycobacterium/tuberculosis/ -t {params.threads}"
+
+
+if config["tuberculosis"]:
+     rule collate_results:
+          input:
+               expand(rules.tbprofiler.output, sample=config["tuberculosis"])
+          output:
+               "PHET/Mycobacterium/tuberculosis/{MID_run}_tbprofiler_summary.txt"
+          conda:
+               "tbprofiler_v6.2"
+          params:
+               results = "{MID_run}_tbprofiler_summary",
+               out_dir = "PHET/Mycobacterium/tuberculosis/"
+          shell:
+               "tb-profiler collate --prefix {params.out_dir}/{params.results} --dir PHET/Mycobacterium/tuberculosis/results/"
+          
