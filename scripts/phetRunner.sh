@@ -2,8 +2,8 @@
 
 # PHET Version 31/03/2025
 
-# VERSION="v5.0.1"
-VERSION=$(git ls-remote --tags https://github.com/SAP-PHE-Bioinformatics/PHET.git | tail -n 1 | cut -f 3 -d "/")
+VERSION="v5.0.1"
+# VERSION=$(git ls-remote --tags https://github.com/SAP-PHE-Bioinformatics/PHET.git | tail -n 1 | cut -f 3 -d "/")
 
 ##########################################################################################
 # Check for -v or --version BEFORE processing the input
