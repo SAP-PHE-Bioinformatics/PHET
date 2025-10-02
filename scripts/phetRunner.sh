@@ -58,9 +58,6 @@ sbatch --exclude=frgeneseq-control --nodelist=frgeneseq03 --nodes=1 --job-name m
 # Ectyper for E.coli - Run in the new Snakefile_Ecoli. AK 01/07/2024.
 # sbatch --dependency=afterok:${JOBID_phesiqcal} --exclude=frgeneseq-control --nodelist=frgeneseq03 --nodes=1 --job-name ectyper -o slurm-%x-%j.out --mem 50G --ntasks 16 --time 960:00:00 -D $scratchdir/ --wrap "snakemake -j 16 --configfile $scratchdir/PHET/phet.yaml --snakefile /phe/tools/PHET/scripts/Snakefile_ectyper --use-conda --nolock --printshellcmds"
 
-# TB-Profiler for Mycobacterium tuberculosis
-sbatch --exclude=frgeneseq-control --nodelist=frgeneseq03 --nodes=1 --job-name tbprofiler -o slurm-%x-%j.out --mem 100G --ntasks 16 --time 960:00:00 -D $scratchdir/ --wrap "snakemake -j 16 --configfile $scratchdir/PHET/phet.yaml --snakefile /phe/tools/PHET/scripts/Snakefile_tbprofiler --use-conda --nolock --printshellcmds --latency-wait 300"
-
 # Legsta for Legionella 
 sbatch --exclude=frgeneseq-control --nodelist=frgeneseq03 --nodes=1 --job-name legsta -o slurm-%x-%j.out --mem 50G --ntasks 16 --time 960:00:00 -D $scratchdir/ --wrap "snakemake -j 16 --configfile $scratchdir/PHET/phet.yaml --snakefile /phe/tools/PHET/scripts/Snakefile_legsta --use-conda --nolock --printshellcmds"
 
@@ -81,7 +78,7 @@ array=(${shigella// / })
 JOBID_shigella=${array[3]}
 
 # Mykrobe Sonneityping
-sbatch --dependency=afterok:${JOBID_shigella} --exclude=frgeneseq-control --nodelist=frgeneseq03 --nodes=1 --job-name sonneityping -o slurm-%x-%j.out --mem 50G --ntasks 16 --time 960:00:00 -D $scratchdir/ --wrap "snakemake -j 16 --configfile $scratchdir/PHET/phet.yaml --snakefile /phe/tools/PHET/scripts/Snakefile_sonneityping --latency-wait 120 --use-conda --nolock --printshellcmds"
+# sbatch --dependency=afterok:${JOBID_shigella} --exclude=frgeneseq-control --nodelist=frgeneseq03 --nodes=1 --job-name sonneityping -o slurm-%x-%j.out --mem 50G --ntasks 16 --time 960:00:00 -D $scratchdir/ --wrap "snakemake -j 16 --configfile $scratchdir/PHET/phet.yaml --snakefile /phe/tools/PHET/scripts/Snakefile_sonneityping --latency-wait 120 --use-conda --nolock --printshellcmds"
 
 # Staphylococcus aureus
 sbatch --exclude=frgeneseq-control --nodelist=frgeneseq03 --nodes=1 --job-name saureus -o slurm-%x-%j.out --mem 50G --ntasks 16 --time 960:00:00 -D $scratchdir/ --wrap "snakemake -j 16 --configfile $scratchdir/PHET/phet.yaml --snakefile /phe/tools/PHET/scripts/Snakefile_saureus --use-conda --nolock --printshellcmds"
@@ -107,6 +104,8 @@ sbatch --exclude=frgeneseq-control --nodelist=frgeneseq03 --nodes=1 --job-name k
 # Sistr for Salmonella typing
 sistr=$(sbatch --exclude=frgeneseq-control --nodelist=frgeneseq03 --nodes=1 --job-name sistr -o slurm-%x-%j.out --mem 50G --ntasks 16 --time 960:00:00 -D $scratchdir/ --wrap "snakemake -j 16 --configfile $scratchdir/PHET/phet.yaml --snakefile /phe/tools/PHET/scripts/Snakefile_sistr --use-conda --nolock --printshellcmds")
 
+# TB-Profiler for Mycobacterium tuberculosis
+sbatch --exclude=frgeneseq-control --nodelist=frgeneseq03 --nodes=1 --job-name tbprofiler -o slurm-%x-%j.out --mem 100G --ntasks 16 --time 960:00:00 -D $scratchdir/ --wrap "snakemake -j 16 --configfile $scratchdir/PHET/phet.yaml --snakefile /phe/tools/PHET/scripts/Snakefile_tbprofiler --use-conda --nolock --printshellcmds --latency-wait 300"
 
 ### EXCLUDED
 #identifying job id for sistr to set dependency for snippy runner in parent runner script

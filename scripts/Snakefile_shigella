@@ -1,58 +1,98 @@
-###config file###
+# Snakefile comprising of Shigella typing tools - All Shigella species and S. Sonnei specific tool.
+# Also creates summary file from each tool, followed by a report summary summarising QC + typing + AMR results for Shigella.
 
-configfile: "phet.yaml"
 
+# ----------------------------
+# LOADING PYTHON PACKAGES/LIBRARIES
+# ----------------------------
 import pandas as pd
 import pathlib as pb 
 import subprocess as sp 
 
-print(config["shigella"])
+# ----------------------------
+# CONFIG AND SAMPLE SELECTION
+# ----------------------------
 
-##target rules###
+configfile: "phet.yaml"
 
-if config["shigella"]:
-      rule all:
-        input:
-          #    directory("PHET/Shigella/Shigatyper/"),
-             expand("PHET/Shigella/Shigatyper/{sample}.tsv", sample=config["shigella"]),
-             expand("PHET/Shigella/Shigatyper/{sample}-hits.tsv", sample=config["shigella"]),
-             "PHET/Shigella/Summary_Shigatyper.tsv",
-             expand("PHET/Shigella/ShigeiFinder/{sample}.tsv", sample=config["shigella"]),
-             "PHET/Shigella/Summary_ShigeiFinder.tsv",
-             "PHET/Shigella/Shigella_report_summary.tsv"
+# Loading sample lists from the config file, will be empty lists if none listed.
+shigella = config.get("shigella") or []
+ssonnei = config.get("Ssonnei") or []
 
-### SHIGATYPER ###           
+# Combining shigella and ssonnei sample lists (if either exists) --> for Shared rules
+# otherwise set all_shigella to an empty list so downstream rules are skipped
+all_shigella = shigella + ssonnei if shigella or ssonnei else []
 
-if config["shigella"]:
-      rule shigatyper:
-            input: 
-                  R1 = "input/{sample}_R1.fastq.gz",
-                  R2 = "input/{sample}_R2.fastq.gz"
-            output: 
-                  "PHET/Shigella/Shigatyper/{sample}.tsv",
-                  "PHET/Shigella/Shigatyper/{sample}-hits.tsv"
-            conda:
-                 "shigatyperV2"
-            params:
+# Printing the sample list from each key in config file
+print(f"Shigella samples: {shigella}")
+print(f"S. sonnei samples: {ssonnei}")
+print(f"All Shigella samples: {all_shigella}")
+
+# ----------------------------------------
+# TARGET RULE - Defining final outputs
+# ----------------------------------------
+
+# Collecting outputs specific to S. sonnei into a list if sonnei exists, else an empty list.
+# In rule all --> If S. sonnei list has sampleID listed, then it will expect the output files, if list is empty, then it doesn't.
+ssonnei_outputs = []
+if ssonnei:
+     ssonnei_outputs = [
+          expand("PHET/Shigella/Mykrobe_sonneityping/{sample}.json", sample=all_shigella),
+          "mykrobe_parsed_predictResults.tsv",
+          "PHET/Shigella/mykrobe_parsed_predictResults.tsv",
+     ]
+
+
+if all_shigella:
+     rule all: 
+          input:
+               expand("PHET/Shigella/Shigatyper/{sample}.tsv", sample=all_shigella),
+               expand("PHET/Shigella/Shigatyper/{sample}-hits.tsv", sample=all_shigella),
+               "PHET/Shigella/Summary_Shigatyper.tsv",
+               expand("PHET/Shigella/ShigeiFinder/{sample}.tsv", sample=all_shigella),
+               "PHET/Shigella/Summary_ShigeiFinder.tsv",
+               "PHET/Shigella/Shigella_report_summary.tsv",
+               # Calling S.sonnei output list if applicable/listed
+               *ssonnei_outputs
+
+####################################################################################################
+
+# ----------------------------------------------
+# SHIGATYPER - To run on all samples
+# ----------------------------------------------           
+
+if all_shigella:
+     rule shigatyper:
+          input: 
+               R1 = "input/{sample}_R1.fastq.gz",
+               R2 = "input/{sample}_R2.fastq.gz"
+          output: 
+               "PHET/Shigella/Shigatyper/{sample}.tsv",
+               "PHET/Shigella/Shigatyper/{sample}-hits.tsv"
+          conda:
+               "shigatyperV2"
+          params:
                outdir = "PHET/Shigella/Shigatyper/"
-            shell:
-                 """
-                 shigatyper --R1 {input.R1} --R2 {input.R2} -o {params.outdir}
-                 """
+          shell:
+               """
+               shigatyper --R1 {input.R1} --R2 {input.R2} -o {params.outdir}
+               """
 
 
-### Parsing all individual reports into a summary file ##
+# ----------------------------------------------
+# SHIGATYPER summary file
+# ----------------------------------------------    
 
-if config["shigella"]:
-      rule shigatyper_sum:
-            input:
-                 files = expand("PHET/Shigella/Shigatyper/{sample}.tsv", sample=config["shigella"])
-            output:
-                 "PHET/Shigella/Summary_Shigatyper.tsv"
-            run:
-                shfiles = f"{input.files}".split()
-                summary_table = pd.DataFrame()
-                for file in shfiles:
+if all_shigella:
+     rule shigatyper_sum:
+          input:
+               files = expand("PHET/Shigella/Shigatyper/{sample}.tsv", sample=all_shigella)
+          output:
+               "PHET/Shigella/Summary_Shigatyper.tsv"
+          run:
+               shfiles = f"{input.files}".split()
+               summary_table = pd.DataFrame()
+               for file in shfiles:
                     shigatyper = pb.Path(file)
                     df = pd.read_csv(shigatyper, sep = '\t', header = None, names = ['sample', 'prediction', 'ipaB', 'notes'])
                     df = df.iloc[1:]
@@ -61,73 +101,155 @@ if config["shigella"]:
                     }
                     tempdf = pd.DataFrame(data = sum_df, index = [0])
                     if summary_table.empty:
-                        summary_table = tempdf
+                         summary_table = tempdf
                     else:
-                        summary_table = summary_table.append(tempdf, sort = True)
-                cols = ['Sample', 'Prediction', 'ipaB', 'Notes']
-                summary_table = summary_table.reindex(cols, axis = 'columns')
-                summary_table.to_csv(f"{output}", sep = "\t", index = False)
+                         summary_table = summary_table.append(tempdf, sort = True)
+               cols = ['Sample', 'Prediction', 'ipaB', 'Notes']
+               summary_table = summary_table.reindex(cols, axis = 'columns')
+               summary_table.to_csv(f"{output}", sep = "\t", index = False)
 
 
 ######################################################################################################
 
-### ShigeiFinder
+# ----------------------------------------------
+# SHIGEIFINDER - To run on all samples
+# ----------------------------------------------    
 
-if config["shigella"]:
-      rule ShigeiFinder:
-            input:
-                 R1 = "input/{sample}_R1.fastq.gz",
-                 R2 = "input/{sample}_R2.fastq.gz"
-            output:
-                 "PHET/Shigella/ShigeiFinder/{sample}.tsv"
-            conda:
-                 "shigeifinder"
-            shell:
-                 "shigeifinder -r -i {input.R1} {input.R2} --output {output} -t 16"
-
-
-#### Creating summary file from output files of ShigeiFinder
-
-if config["shigella"]:
-      rule ShigieFinder_sum:
-            input:
-                 files = expand("PHET/Shigella/ShigeiFinder/{sample}.tsv", sample=config["shigella"])
-            output:
-                 "PHET/Shigella/Summary_ShigeiFinder.tsv"
-            run:
-                 sfiles = f"{input.files}".split()
-                 summary_table = pd.DataFrame()
-                 for file in sfiles:
-                       shigeifinder = pb.Path(file)
-                       df = pd.read_csv(shigeifinder, sep = '\t', header = None, names = ['#SAMPLE', 'ipaH', 'VIRULENCE', 'CLUSTER', 'SEROTYPE', 'O_ANTIGEN', 'H_ANTIGEN', 'NOTES'])
-                       df = df.iloc[1:]
-                       tempdf = pd.DataFrame()
-                       sum_df = {'SAMPLE ID' : df.iloc[0,0], 'ipaH' : df.iloc[0,1], 'VIRULENCE' : df.iloc[0,2], 'CLUSTER' : df.iloc[0,3],
-                      'SEROTYPE' : df.iloc[0,4], 'O_ANTIGEN' : df.iloc[0,5], 'H_ANTIGEN' : df.iloc[0,6], 'NOTES' : df.iloc[0,7]
-                       }
-                       tempdf = pd.DataFrame(data = sum_df, index = [0])
-                       if summary_table.empty:
-                              summary_table = tempdf
-                       else:
-                            summary_table = summary_table.append(tempdf, sort = True)
-                 cols = ['SAMPLE ID', 'ipaH', 'VIRULENCE', 'CLUSTER', 'SEROTYPE', 'O_ANTIGEN', 'H_ANTIGEN', 'NOTES']
-                 summary_table = summary_table.reindex(cols, axis = 'columns')
-                 summary_table.to_csv(f"{output}", sep = "\t", index = False)
+if all_shigella:
+     rule ShigeiFinder:
+          input:
+               R1 = "input/{sample}_R1.fastq.gz",
+               R2 = "input/{sample}_R2.fastq.gz"
+          output:
+               "PHET/Shigella/ShigeiFinder/{sample}.tsv"
+          conda:
+               "shigeifinder"
+          shell:
+               "shigeifinder -r -i {input.R1} {input.R2} --output {output} -t 16"
 
 
-if config["shigella"]:
+# ----------------------------------------------
+# SHIGEIFINDER - Summary file rule
+# ----------------------------------------------    
+
+if all_shigella:
+     rule ShigieFinder_sum:
+          input:
+               files = expand("PHET/Shigella/ShigeiFinder/{sample}.tsv", sample=all_shigella)
+          output:
+               "PHET/Shigella/Summary_ShigeiFinder.tsv"
+          run:
+               sfiles = f"{input.files}".split()
+               summary_table = pd.DataFrame()
+               for file in sfiles:
+                    shigeifinder = pb.Path(file)
+                    df = pd.read_csv(shigeifinder, sep = '\t', header = None, names = ['#SAMPLE', 'ipaH', 'VIRULENCE', 'CLUSTER', 'SEROTYPE', 'O_ANTIGEN', 'H_ANTIGEN', 'NOTES'])
+                    df = df.iloc[1:]
+                    tempdf = pd.DataFrame()
+                    sum_df = {'SAMPLE ID' : df.iloc[0,0], 'ipaH' : df.iloc[0,1], 'VIRULENCE' : df.iloc[0,2], 'CLUSTER' : df.iloc[0,3],
+                    'SEROTYPE' : df.iloc[0,4], 'O_ANTIGEN' : df.iloc[0,5], 'H_ANTIGEN' : df.iloc[0,6], 'NOTES' : df.iloc[0,7]
+                    }
+                    tempdf = pd.DataFrame(data = sum_df, index = [0])
+                    if summary_table.empty:
+                         summary_table = tempdf
+                    else:
+                         summary_table = summary_table.append(tempdf, sort = True)
+               cols = ['SAMPLE ID', 'ipaH', 'VIRULENCE', 'CLUSTER', 'SEROTYPE', 'O_ANTIGEN', 'H_ANTIGEN', 'NOTES']
+               summary_table = summary_table.reindex(cols, axis = 'columns')
+               summary_table.to_csv(f"{output}", sep = "\t", index = False)
+
+
+########################################################################################################
+
+# ------------------------------------------------------------
+# MYKROBE SONNEITYPING - For S. sonnei samples only if exists
+# ------------------------------------------------------------
+
+if ssonnei:
+     rule sonneityping:
+          input:
+               R1 = "input/{sample}_R1.fastq.gz",
+               R2 = "input/{sample}_R2.fastq.gz"
+          output: 
+               "PHET/Shigella/Mykrobe_sonneityping/{sample}.json"
+          conda:
+               "pheamr"
+          params:
+               name = "{sample}"
+          shell:
+               """
+               for i in {input}
+               do
+               mykrobe predict --sample {params.name} --species sonnei --format json --out {output} --seq {input.R1} {input.R2}
+               done
+               """
+     
+# ---------------------------------------------------------------------------
+# PARSE SONNEITYPING - Summary file from mykrobe output -- S. sonnei specific
+# ---------------------------------------------------------------------------
+
+if ssonnei:
+     rule parse_mykrobe:
+          input:
+               expand("PHET/Shigella/Mykrobe_sonneityping/{sample}.json", sample=ssonnei)
+          params:
+               filename = "mykrobe_parsed"
+          output:
+               "mykrobe_parsed_predictResults.tsv"
+          shell:
+               "python /phe/tools/sonneityping/parse_mykrobe_predict.py --jsons {input} --alleles /phe/tools/sonneityping/alleles.txt --prefix {params.filename}"
+
+
+# ----------------------------------------------------------------------------
+# OUTPUT DIRECTORY -- Move mykrobe + sonneityping summary file to PHET folder.
+# ----------------------------------------------------------------------------
+
+if ssonnei:
+     rule move_files:
+          input:
+               mykrobe = expand(rules.sonneityping.output, sample=ssonnei),
+               sonnei = rules.parse_mykrobe.output
+          output:
+               "PHET/Shigella/mykrobe_parsed_predictResults.tsv"
+          params:
+               outdir = "PHET/Shigella/"
+          shell:
+               """
+               mv {input.sonnei} {params.outdir}
+               """
+#########################################################################################################
+
+# -------------------------------------------------------------------------------
+# REPORT SUMMARY -- Collates results from all tools into one report summary file. 
+# -------------------------------------------------------------------------------
+
+# Creating an input dictionary for report summary rule
+report_input_dict = {
+     "seq" : "seq_data.tab",
+     "deno" : "denovo.tab",
+     "kraken" : "species_identification.tab",
+     "st" : "mlst.tab",
+     "resist" : "resistome.tab",
+     "amr" : expand("{sample}/abritamr/amrfinder.out", sample=all_shigella),
+     "shigfinder" : rules.ShigieFinder_sum.output,
+     "shigtyper" : rules.shigatyper_sum.output,
+}
+
+# Adding a condition to check if S.sonnei sampleID is in list, to add mykrobe output file to the input dictionary for report summary rule
+if ssonnei:
+     report_input_dict["mykrobe"] = rules.move_files.output
+
+
+######################
+# RULE REPORT SUMMARY
+######################
+
+if all_shigella:
      rule report_sum:
           input:
-               seq = "seq_data.tab",
-               deno = "denovo.tab",
-               kraken = "species_identification.tab",
-               st = "mlst.tab",
-               resist = "resistome.tab",
-               amr = "abritamr_summary.tsv",
-               shigfinder = "PHET/Shigella/Summary_ShigeiFinder.tsv",
-               shigtyper = "PHET/Shigella/Summary_Shigatyper.tsv"
+               **report_input_dict
           output:
-               S_flexneri = "PHET/Shigella/Shigella_report_summary.tsv"
+               "PHET/Shigella/Shigella_report_summary.tsv"
           run:
                import pandas as pd
                import numpy as np
@@ -135,67 +257,133 @@ if config["shigella"]:
                # reading, filtering and formatting seq_data
                seqdata = pd.read_csv(f"{input.seq}", sep ='\t')
                seqdata = seqdata.loc[:, ~seqdata.columns.str.contains('^Unnamed')]
-               seqdata = seqdata.loc[:, ['#Accession', 'Reads', 'AvgQual']]
+               seqdata = seqdata.loc[:, ['SeqID', 'Reads', 'AvgQual']]
+               seqdata['SeqID'] = seqdata['SeqID'].astype(str)
+
                # reading, filtering and formatting denovo assembly stats
                denovo = pd.read_csv(f"{input.deno}", sep = '\t')
                denovo['Name'] = denovo['Name'].str.replace(r'filtered_contigs/', '')
                denovo['Name'] = denovo['Name'].str.replace(r'.fna', '')
                denovo = denovo.loc[:,['Name','no']]
-               denovo = denovo.rename({'Name': '#Accession', 'no':'contigs'}, axis=1)
+               denovo = denovo.rename({'Name': 'SeqID', 'no':'contigs'}, axis=1)
                denovo['contigs'] = denovo['contigs'].astype(int)
+               denovo['SeqID'] = denovo['SeqID'].astype(str)
+
                # reading kraken data
                sp = pd.read_csv(f"{input.kraken}", sep='\t')
+               sp['SeqID'] = sp['SeqID'].astype(str)
+
                # reading, filtering and formatting MLST data
-               cols_list = ['#Accession', 'scheme', 'ST', 'allele1', 'allele2', 'allele3', 'allele4', 'allele5', 'allele6', 'allele7', 'allele8']
+               cols_list = ['SeqID', 'scheme', 'ST', 'allele1', 'allele2', 'allele3', 'allele4', 'allele5', 'allele6', 'allele7', 'allele8']
                mlst = pd.read_csv(f"{input.st}", sep='\t', header=None, names=cols_list)
-               mlst['#Accession'] = mlst['#Accession'].str.replace(r'filtered_contigs/', '')
-               mlst['#Accession'] = mlst['#Accession'].str.replace(r'.fna', '')
-               mlst = mlst.loc[:,['#Accession', 'scheme', 'ST']]
+               mlst['SeqID'] = mlst['SeqID'].str.replace(r'filtered_contigs/', '')
+               mlst['SeqID'] = mlst['SeqID'].str.replace(r'.fna', '')
+               mlst = mlst.loc[:,['SeqID', 'scheme', 'ST']]
+               mlst['SeqID'] = mlst['SeqID'].astype(str)
+
                # reading, filtering and formatting resistome.tab
                resistome = pd.read_csv(f"{input.resist}", sep='\t')
                resistome['#FILE'] = resistome['#FILE'].str.replace(r'/abricate.tab', '')
-               resistome = resistome.rename({'#FILE': '#Accession', 'NUM_FOUND' : 'ABRICATE_count'}, axis =1)
+               resistome = resistome.rename({'#FILE': 'SeqID', 'NUM_FOUND' : 'ABRICATE_count'}, axis =1)
                resistome = resistome.replace('.', np.nan)
-               # reading, filtering and formatting amrfinder data
-               abritamr = pd.read_csv(f"{input.amr}", sep ='\t')
-               abritamr = abritamr.rename({'Isolate': '#Accession'}, axis =1)
-               abritamr = abritamr.replace('.', np.nan)
-               # abritamr["abritamr_Count"] = (abritamr != ".").sum(axis=1)
-               # abritamr.insert(1, "abritamr_Count", abritamr.count(axis=1), True)
-               # abritamr['abritamr_Count'] = abritamr['abritamr_Count']-1
-               abritamr['#Accession'] = abritamr['#Accession'].astype(str)
+               resistome['SeqID'] = resistome['SeqID'].astype(str)
+
+               ######################################################################################
+               # reading, filtering and formatting raw amrfinder file generated by abritamr
+
+               amr_files = f"{input.amr}".split()
+               amr_filter_df = []
+               # Reading each file from the input list using forloop
+               for file in amr_files:
+                    amrfinder = pb.Path(file)
+                    df = pd.read_csv(amrfinder, sep = "\t")
+                    # Creating accession number column and populating from file path
+                    df['SeqID'] = f"{amrfinder.parts[0]}"
+                    # Only collecting AMR genes, excluding virulence and stress related genes
+                    df = df[(df["Element type"].str.strip() == 'AMR')]
+                    # Selecting only gene names and corresponding %coverage columns
+                    amr_df = df.loc[:,['SeqID', 'Gene symbol', '% Coverage of reference sequence']]
+                    amr_df.rename(columns={"% Coverage of reference sequence":"Coverage", "Gene symbol":"Gene"}, inplace = True)
+                    amr_filter_df.append(amr_df)
+               # Transposing AMR results into row with gene names as header and %coverage as values
+               # Needed in this transposed format to be compatible with final concatenation of summary results
+               amr_transposed = []
+               for f in amr_filter_df:
+                    amr_pivot = f.pivot_table(index = 'SeqID', columns = 'Gene', values = 'Coverage',
+                    aggfunc=lambda x: '; '.join(map(str, x))) # lambda function includes multiple coverages of a gene if multiple copies detected on different contigs.
+                    # Inserting a column to count the number of genes.
+                    amr_pivot.insert(0, "AmrFinder_Gene_Count", amr_pivot.count(axis=1), True)
+                    amr_transposed.append(amr_pivot)
+                    # print(amr_transposed)
+               amr_concat_df = pd.DataFrame()
+               amr_concat_df = amr_concat_df.append(amr_transposed, ignore_index=False)
+               amr_concat_df = amr_concat_df.fillna('-', axis=1)
+               amr_final = amr_concat_df.sort_index().sort_index(axis=1)
+               print(amr_final)
+
+               ######################################################################################
+
                # reading and formatting shigeifinder results
                shfinder = pd.read_csv(f"{input.shigfinder}", sep ='\t')
-               shfinder = shfinder.rename({'SAMPLE ID': '#Accession', 'SEROTYPE': 'ShigeiFinder Serotype Prediction'}, axis =1)
-               shfinder['#Accession'] = shfinder['#Accession'].astype(str)
+               shfinder = shfinder.rename({'SAMPLE ID': 'SeqID', 'SEROTYPE': 'ShigeiFinder Serotype Prediction'}, axis =1)
+               shfinder['SeqID'] = shfinder['SeqID'].astype(str)
                shfinder = shfinder.iloc[:,[0,4,3,1,2,5,6,7]]
-               # reading and formatting shigatyper results
+               print(shfinder)
+               # reading and formatting shigatyper data
                shtyper = pd.read_csv(f"{input.shigtyper}", sep='\t')
-               shtyper = shtyper.rename({'Sample': '#Accession', 'Prediction' : 'ShigaTyper Serotype Prediction'}, axis =1)
-               shtyper['#Accession'] = shtyper['#Accession'].astype(str)
+               shtyper = shtyper.rename({'Sample': 'SeqID', 'Prediction' : 'ShigaTyper Prediction'}, axis =1)
+               shtyper['SeqID'] = shtyper['SeqID'].astype(str)
+               print(shtyper)
+               # reading, filtering and formatting sonneityping data **if available**
                
-               print("SEQDATA COLUMNS:", seqdata.columns)
-               print("DENOVO COLUMNS:", denovo.columns)
-               print("MLST COLUMNS:", mlst.columns)
-               print("ABRICATE COLS", resistome.columns)
-               print("SHIGEIFINDER COLS", shfinder.columns)
-               print("SHIGATYPER COLS", shtyper.columns)
-               print("ABRITAMR COLUMNS:", abritamr.columns)
+               if "mykrobe" in f"{input}":
+                    print("mykrobe is present")
+                    sonnei = pd.read_csv(f"{input.mykrobe}", sep = '\t')
+                    col_to_drop = 5
+                    sonnei = sonnei.iloc[:, :-col_to_drop]
+                    sonnei = sonnei.rename({'genome':'SeqID', 'species':'MYKROBE_species'}, axis =1)
+                    sonnei['SeqID'] = sonnei['SeqID'].astype(str)
+               else:
+                    sonnei = None
+                    # sonnei = pd.DataFrame()
+                    print("No S. Sonnei detected in the run, no mykrobe summary to include in the report")
+               # print(sonnei)
                # Creating final output file by merge
-               all_files = [sp, mlst, shfinder, shtyper, resistome, abritamr]
+               sp_st = [sp, mlst]
+               typing_data = [shfinder, shtyper]
+               amr_data = [resistome, amr_final]
 
+               # Only appending mykrobe sonnei file to all_files list above if present
+               if sonnei is not None:
+                    typing_data.append(sonnei)
+                    print("sonneityping summary added to all_files")
+               # if not sonnei.empty:
+               #      all_files.append(sonnei)
+               #      print("sonneityping summary added to all_files")
+                    
                # merging two files first
-               Output_df = pd.merge(seqdata, denovo, on='#Accession', how='inner')
+               Output_df = pd.merge(seqdata, denovo, on='SeqID', how='inner')
+               
+               # Mergining different lists of dataframes one by one to ensure order of result columns in the report summary
+               ## 1 Species and MLST df list first
+               for i in sp_st:
+                    Output_df = pd.merge(Output_df, i, on='SeqID', how='inner')
+               ## 2 All typing df list second
+               for i in typing_data:
+                    Output_df = pd.merge(Output_df, i, on='SeqID', how='outer')
+               # 3 All amr data df list third
+               for i in amr_data:
+                    Output_df = pd.merge(Output_df, i, on='SeqID', how='inner')
 
-               # merging remaining files 
-               for i in all_files:
-                    Output_df = pd.merge(Output_df, i, on='#Accession', how='inner')
-               # Removing any Shigella sonnei, removing any columns with all NA values
+               final_output_df = Output_df
+
+               # Removing any columns with all NA values
+               final_output_df.dropna(axis=1, how='all', inplace = True)
                # Inserting Genomic QC column to include pass or fail criteria based on QC conditions
-               # Output_df = Output_df[~Output_df['#1 Match'].str.contains("sonnei")] <-- 29/04/24 - removing this because if only sonnei, then no dataframe gets created.
-               Output_df.dropna(axis=1, how='all', inplace = True)
-               Output_df.insert(1, 'Genomic QC', '')
-               Output_df['Genomic QC']=np.where((Output_df['Reads']>= 1000000) & (Output_df['contigs']<= 500) & (Output_df['AvgQual'] >= 30), 'PASS', 'FAIL' )
-
+               final_output_df.insert(1, 'Genomic QC', '')
+               final_output_df['Genomic QC']=np.where((final_output_df['Reads']>= 1000000) & (final_output_df['contigs']<= 500) & (final_output_df['AvgQual'] >= 30), 'PASS', 'FAIL' )
+               final_output_df = final_output_df.fillna('-', axis=1)
                # writing to output file
-               Output_df.to_csv(f"{output.S_flexneri}", sep="\t", header=True, index=False)
+               final_output_df.to_csv(f"{output}", sep="\t", header=True, index=False)
+
+
