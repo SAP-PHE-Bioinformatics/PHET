@@ -28,7 +28,7 @@ awk 'BEGIN {print "spneumoniae:"}; (FS="\t") {if($0 ~/spneumoniae/ && $2 >= 8000
 
 awk 'BEGIN {print "spyogenes:"}; (FS="\t") {if($9 == "Streptococcus pyogenes" && $2 >= 800000 && $15 <= 500 ) print "- " $1 }' "$QC_FILE"
 
-awk 'BEGIN {print "shigella:"}; (FS="\t") {if($9 ~/Shigella/ || $11 ~/Shigella/ && $2 >= 1000000 && $15 <= 500 ) print "- " $1  }' "$QC_FILE"
+awk 'BEGIN {print "shigella:"}; (FS="\t") {if($9 ~/Shigella/ && $9 !~/Shigella sonnei/ && $2 >= 1000000 && $15 <= 500 || $11 ~/Shigella/ && $11 !~/Shigella sonnei/ && $2 >= 1000000 && $15 <= 500 ) print "- " $1  }' "$QC_FILE"
 
 awk 'BEGIN {print "Ssonnei:"}; (FS="\t") {if($9 == "Shigella sonnei" && $2 >= 1000000 && $15 <= 500 || $11 == "Shigella sonnei" && $2 >= 1000000 && $15 <= 500 ) print "- " $1  }' "$QC_FILE"
 
