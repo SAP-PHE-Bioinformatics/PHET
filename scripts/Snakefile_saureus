@@ -5,78 +5,39 @@ configfile: "phet.yaml"
 if config["saureus"]:
     rule all:
         input:
-            expand("PHET/Staphylococcus_aureus/staphopia/{sample}_staphopia.tab", sample=config["saureus"]),
-            expand("PHET/Staphylococcus_aureus/staphopia/hamming_distances/{sample}_staphopia_hamming.json", sample=config["saureus"]),
-            "PHET/Staphylococcus_aureus/Summary_staphopia.tab",
-            expand("PHET/Staphylococcus_aureus/spaTyper/{sample}_spaTyper.tab", sample=config["saureus"]),
-            "PHET/Staphylococcus_aureus/Summary_spaTyper.tab"
+            directory(expand("PHET/Staphylococcus_aureus/sccmec/{sample}", sample=config["saureus"])),
+            "PHET/Staphylococcus_aureus/Summary_sccmec.tab"
+
 
 if config["saureus"]:
-    rule staphopia:
+    rule sccmec:
         input:
             "filtered_contigs/{sample}.fna"
         output:
-            "PHET/Staphylococcus_aureus/staphopia/{sample}_staphopia.tab"
+            outdir = directory("PHET/Staphylococcus_aureus/sccmec/{sample}"),
+            out_tsv = "PHET/Staphylococcus_aureus/sccmec/{sample}/{sample}.tsv"
+    
         conda:
-            "staphopia-sccmec"
+            "sccmec"
+        params:
+            seqid = '{sample}'
         shell:
-            "staphopia-sccmec --assembly {input} >> {output}"
+            "sccmec --input {input} --prefix {params.seqid} --outdir {output.outdir}"
+
+
 
 if config["saureus"]:
-    rule staphopia_hamming:
+    rule sccmec_sum:
         input:
-            "filtered_contigs/{sample}.fna"
+            files = expand(rules.sccmec.output.out_tsv, sample=config["saureus"])
         output:
-            "PHET/Staphylococcus_aureus/staphopia/hamming_distances/{sample}_staphopia_hamming.json"
-        conda:
-            "staphopia-sccmec"
-        shell:
-            "staphopia-sccmec --assembly {input} --hamming --json >> {output}"
-
-if config["saureus"]:
-    rule staphophia_sum:
-        input:
-            files = expand("PHET/Staphylococcus_aureus/staphopia/{sample}_staphopia.tab", sample=config["saureus"])
-        output:
-            "PHET/Staphylococcus_aureus/Summary_staphopia.tab"
+            "PHET/Staphylococcus_aureus/Summary_sccmec.tab"
         run:
             import pandas as pd
             dfs = []
+            # sfiles = f"{input.files}".split()
             for file in input.files:
                 df = pd.read_csv(file, sep='\t')
-                dfs.append(df)
-            summary_table = pd.concat(dfs)
-            summary_table.to_csv(output[0], sep='\t', index=False)
-
-if config["saureus"]:
-    rule spaTyper:
-        input: 
-            "filtered_contigs/{sample}.fna"
-        output: 
-            "PHET/Staphylococcus_aureus/spaTyper/{sample}_spaTyper.tab"
-        conda:
-            "staphopia-sccmec"
-        shell:
-            """
-            spaTyper -f {input} --output {output}
-            """
-
-if config["saureus"]:
-    rule spaTyper_sum:
-        input:
-            files = expand("PHET/Staphylococcus_aureus/spaTyper/{sample}_spaTyper.tab", sample=config["saureus"])
-        output:
-            "PHET/Staphylococcus_aureus/Summary_spaTyper.tab"
-        run:
-            import pandas as pd
-            import pathlib as pb
-            dfs = []
-            sfiles = f"{input}".split()
-            for file in sfiles:
-                spaTyper = pb.Path(file)
-                df = pd.read_csv(spaTyper, sep = "\t")
-                df.insert(0, "Accession", spaTyper.parts[3])
-                df["Accession"] = df["Accession"].str.replace("_spaTyper.tab", "")
                 dfs.append(df)
             summary_table = pd.concat(dfs)
             summary_table.to_csv(output[0], sep='\t', index=False)
