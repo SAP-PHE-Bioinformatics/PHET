@@ -79,12 +79,10 @@ echo TBProfiler,$TBPROFILER,Tb-profiler_DB,$TB_DB\n
 conda activate pasty
 pasty --version 
 
-# Staphopia and SpaTyper - Staphylococcus aureus
-conda activate staphopia-sccmec
-staphopia=$(staphopia-sccmec --version | tr " " ",")
-spatyper=$(spaTyper --version | tr " " ",")
-echo $staphopia
-echo $spatyper
+# sccmec - Staphylococcus aureus
+conda activate sccmec
+sccmec_v=$(sccmec --version 2>&1)
+echo "$sccmec_v" | awk '{gsub(/ schema /,"\nschema "); print}'
 
 # Mash - MABS and MAIC
 conda activate phesiqcal
