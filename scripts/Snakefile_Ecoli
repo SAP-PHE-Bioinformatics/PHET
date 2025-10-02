@@ -11,7 +11,7 @@ if config["ecoli"]:
         input:
             "PHET/Escherichia/ECTyper/output.tsv",
             expand("PHET/Escherichia/ClermonTyping_{date}/ClermonTyping_{date}_phylogroups.txt", date=date_today),
-            expand("PHET/Escherichia/{MID_ID}_Ecoli_WGS_result_summary.tsv", MID_ID=MID)
+            expand("PHET/Escherichia/{MID_ID}_Ecoli_WGS_result_summary.xlsx", MID_ID=MID)
 
 
 if config["ecoli"]:
@@ -50,10 +50,10 @@ if config["ecoli"]:
             ECTyper = "PHET/Escherichia/ECTyper/output.tsv",
             Clermont = expand("PHET/Escherichia/ClermonTyping_{date}/ClermonTyping_{date}_phylogroups.txt", date=date_today)
         output:
-            run_report = expand("PHET/Escherichia/{MID_ID}_Ecoli_WGS_result_summary.tsv", MID_ID=MID)
+            run_report = expand("PHET/Escherichia/{MID_ID}_Ecoli_WGS_result_summary.xlsx", MID_ID=MID)
             # ongoing_file = "/phe/micro/Escherichia/SAP_Ongoing_Ecoli_compiled_WGS_results.tsv" # hard-coded inside the python script due to issues with snakemake overwriting the file.
         params:
             runid = config["RunID"]
         shell:
-            "python /phe/tools/PHET/scripts/Ecoli_result_summary.py --mid {params.runid} --qc {input.QC_summary} --vir {input.vir_genes} --ec {input.ECTyper} --cl {input.Clermont} --out {output.run_report}"
+            "python /phe/tools/PHET/scripts/Ecoli_result_summary.py --mid {params.runid} --qc {input.QC_summary} --vir {input.vir_genes} --ec {input.ECTyper} --cl {input.Clermont} --out {output.run_report} --routine"
 
