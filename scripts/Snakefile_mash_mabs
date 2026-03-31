@@ -6,7 +6,8 @@ configfile: "phet.yaml"
 if config["m_abscessus"]:
     rule all:
         input:
-            expand("PHET/Mycobacterium/abscessus/{sample}_mash_dist.tab", sample=config["m_abscessus"])
+            expand("PHET/Mycobacterium/abscessus/{sample}_mash_dist.tab", sample=config["m_abscessus"]),
+            "PHET/Mycobacterium/abscessus/mlst_mabscessus.tab"
 
 
 
@@ -22,3 +23,15 @@ if config["m_abscessus"]:
             "phesiqcal"
         shell:
             "mash dist {params.ref} {input} | sort -gk3 > {output}"
+
+
+if config["m_abscessus"]:
+    rule mlst_mabs:
+        input:
+            expand("filtered_contigs/{sample}.fna", sample=config["m_abscessus"])
+        output:
+            "PHET/Mycobacterium/abscessus/mlst_mabscessus.tab"
+        conda:
+            "mlst"
+        shell:
+            "mlst --scheme mabscessus {input} >> {output}"
