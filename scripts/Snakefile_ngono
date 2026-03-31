@@ -30,4 +30,4 @@ if config["gonorrhoeae"]:
                         conda:
                              "phetype"
                         shell:
-                             "python /phe/tools/pyngSTar/pyngSTar.py -a -i {input} -o {output} -p /phe/tools/pyngSTar/pyngSTarDB_20230915/"
+                             "python /phe/tools/pyngSTar/pyngSTar.py -a -i {input} -o {output} -p /phe/tools/pyngSTar/pyngSTARDB_20251208/"
