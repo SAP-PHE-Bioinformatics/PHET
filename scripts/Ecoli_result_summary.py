@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+Ecoli_sum_version="Ecoli_result_summary.py: v20250801"
+
 # Import libraries
 import pandas as pd
 import pathlib
@@ -32,6 +34,7 @@ parser.add_argument('--ec', required=True, help="Path to the output.tsv file fro
 parser.add_argument('--cl', required=True, help="Path to the ClermonTyping_YYYYMMDD_phylogroups.txt file")
 parser.add_argument('--out', required=True, help="Name of the report summary file per run")
 parser.add_argument('--routine', '-r', action='store_true', help='If routine analysis, data is appended to ongoing record of E.coli sequence results')
+parser.add_argument("-v", "--version", action="version", version=Ecoli_sum_version)
 
 
 args = parser.parse_args()
