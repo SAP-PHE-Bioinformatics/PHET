@@ -8,12 +8,16 @@
 import pandas as pd
 import pathlib as pb 
 import subprocess as sp 
-
+import datetime
 # ----------------------------
 # CONFIG AND SAMPLE SELECTION
 # ----------------------------
 
 configfile: "phet.yaml"
+
+# General variables
+MID = config["RunID"]
+date_today = datetime.datetime.today().strftime('%d/%m/%Y')
 
 # Loading sample lists from the config file, will be empty lists if none listed.
 shigella = config.get("shigella") or []
@@ -27,7 +31,6 @@ all_shigella = shigella + ssonnei if shigella or ssonnei else []
 print(f"Shigella samples: {shigella}")
 print(f"S. sonnei samples: {ssonnei}")
 print(f"All Shigella samples: {all_shigella}")
-
 # ----------------------------------------
 # TARGET RULE - Defining final outputs
 # ----------------------------------------
@@ -37,9 +40,10 @@ print(f"All Shigella samples: {all_shigella}")
 ssonnei_outputs = []
 if ssonnei:
      ssonnei_outputs = [
-          expand("PHET/Shigella/Mykrobe_sonneityping/{sample}.json", sample=all_shigella),
+          expand("PHET/Shigella/Mykrobe_sonneityping/{sample}.json", sample=ssonnei),
           "mykrobe_parsed_predictResults.tsv",
           "PHET/Shigella/mykrobe_parsed_predictResults.tsv",
+          touch("PHET/Shigella/appendedLineageToOngoingPhyloFile.txt"),
      ]
 
 
@@ -51,7 +55,8 @@ if all_shigella:
                "PHET/Shigella/Summary_Shigatyper.tsv",
                expand("PHET/Shigella/ShigeiFinder/{sample}.tsv", sample=all_shigella),
                "PHET/Shigella/Summary_ShigeiFinder.tsv",
-               "PHET/Shigella/Shigella_report_summary.tsv",
+               "PHET/Shigella/Shigella_Report_summary.tsv",
+               "PHET/Shigella/Shigella_results_summary.tsv",
                # Calling S.sonnei output list if applicable/listed
                *ssonnei_outputs
 
@@ -178,10 +183,7 @@ if ssonnei:
                name = "{sample}"
           shell:
                """
-               for i in {input}
-               do
                mykrobe predict --sample {params.name} --species sonnei --format json --out {output} --seq {input.R1} {input.R2}
-               done
                """
      
 # ---------------------------------------------------------------------------
@@ -217,6 +219,25 @@ if ssonnei:
                """
                mv {input.sonnei} {params.outdir}
                """
+
+# ----------------------------------------------------------------------------
+# Write Lineage to the ongoing file for downstream Lineage3 phylo analysis using sympheny
+# ----------------------------------------------------------------------------
+if ssonnei:
+     rule write_lineage:
+          input:
+               rules.move_files.output
+          output:
+               touch("PHET/Shigella/appendedLineageToOngoingPhyloFile.txt")
+          params:
+               phylo_record = "/scratch/bacterial_pathogens/Shigella/sonnei/Sson_lineage3_phylo_analysis/SSON_Lin3_phylo_ongoing_seqID_list.tsv",
+               runID = MID,
+               analysisDate = date_today
+          shell:
+               r"""
+               awk -F '\t' -v runID={params.runID} -v date={params.analysisDate} '$3 ~ /^3\./ && $2 ~ /sonnei/ {{ print $1 "\t" runID "\t" date "\t" $3 "\ttime conditional"}}' {input} >> {params.phylo_record}
+               """
+
 #########################################################################################################
 
 # -------------------------------------------------------------------------------
@@ -229,7 +250,7 @@ report_input_dict = {
      "deno" : "denovo.tab",
      "kraken" : "species_identification.tab",
      "st" : "mlst.tab",
-     "resist" : "resistome.tab",
+     "abr" : expand("{sample}/abricate.tab", sample=all_shigella),
      "amr" : expand("{sample}/abritamr/amrfinder.out", sample=all_shigella),
      "shigfinder" : rules.ShigieFinder_sum.output,
      "shigtyper" : rules.shigatyper_sum.output,
@@ -241,7 +262,7 @@ if ssonnei:
 
 
 ######################
-# RULE REPORT SUMMARY
+# RULE REPORT SUMMARY 
 ######################
 
 if all_shigella:
@@ -249,10 +270,12 @@ if all_shigella:
           input:
                **report_input_dict
           output:
-               "PHET/Shigella/Shigella_report_summary.tsv"
+               report = "PHET/Shigella/Shigella_Report_summary.tsv",
+               summary = "PHET/Shigella/Shigella_results_summary.tsv"
           run:
                import pandas as pd
                import numpy as np
+               import re
 
                # reading, filtering and formatting seq_data
                seqdata = pd.read_csv(f"{input.seq}", sep ='\t')
@@ -281,13 +304,38 @@ if all_shigella:
                mlst = mlst.loc[:,['SeqID', 'scheme', 'ST']]
                mlst['SeqID'] = mlst['SeqID'].astype(str)
 
-               # reading, filtering and formatting resistome.tab
-               resistome = pd.read_csv(f"{input.resist}", sep='\t')
-               resistome['#FILE'] = resistome['#FILE'].str.replace(r'/abricate.tab', '')
-               resistome = resistome.rename({'#FILE': 'SeqID', 'NUM_FOUND' : 'ABRICATE_count'}, axis =1)
-               resistome = resistome.replace('.', np.nan)
-               resistome['SeqID'] = resistome['SeqID'].astype(str)
-
+               # # reading, filtering and formatting resistome.tab
+               # resistome = pd.read_csv(f"{input.resist}", sep='\t')
+               # resistome['#FILE'] = resistome['#FILE'].str.replace(r'/abricate.tab', '')
+               # resistome = resistome.rename({'#FILE': 'SeqID', 'NUM_FOUND' : 'ABRICATE_count'}, axis =1)
+               # resistome = resistome.replace('.', np.nan)
+               # resistome['SeqID'] = resistome['SeqID'].astype(str)
+               # print()
+               # Processing and filtering abricate data files per sample.
+               # abr_dir = Path(abr_path)
+               abr_files = f"{input.abr}".split()
+               abr_filter_df = []
+               for file in abr_files:
+                    abricate = pb.Path(file)
+                    df = pd.read_csv(abricate, sep = "\t")
+                    df = df.rename({'#FILE' : 'SeqID'}, axis = 1)
+                    df['SeqID'] = df['SeqID'].str.replace(r'filtered_contigs/', '')
+                    df['SeqID'] = df['SeqID'].str.replace(r'.fna', '')
+                    abr_df = df.loc[:,['SeqID', 'GENE', '%COVERAGE']]
+                    abr_filter_df.append(abr_df)
+                    print(abr_filter_df)
+               abr_transposed = []
+               for f in abr_filter_df:
+                    abr_pivot = f.pivot_table(index = 'SeqID', columns = 'GENE', values = '%COVERAGE',
+                    aggfunc=lambda x: '; '.join(map(str, x))) # lambda function includes multiple coverages of a gene if multiple copies detected on different contigs.
+                    abr_pivot.insert(0, "Abricate_Gene_Count", abr_pivot.count(axis=1), True)
+                    abr_transposed.append(abr_pivot)
+                    # print(amr_transposed)
+               abr_concat_df = pd.DataFrame()
+               abr_concat_df = abr_concat_df.append(abr_transposed, ignore_index=False)
+               abr_concat_df = abr_concat_df.fillna('-', axis=1)
+               abr_final = abr_concat_df.sort_index().sort_index(axis=1)
+               print(abr_final)               
                ######################################################################################
                # reading, filtering and formatting raw amrfinder file generated by abritamr
 
@@ -320,6 +368,83 @@ if all_shigella:
                amr_concat_df = amr_concat_df.fillna('-', axis=1)
                amr_final = amr_concat_df.sort_index().sort_index(axis=1)
                print(amr_final)
+               
+               #####################################################################
+               ## Function to apply to AMR dataframes from abricate and amrfinder. #
+               #####################################################################
+               def process_amr_like_df(
+                    df,
+                    gene_prefixes,
+                    id_col='SeqID',
+                    count_col='Gene_Count'
+               ):
+                    df = df.copy()
+
+                    ordered_gene_cols = []
+                    rename_gene_map = {}
+
+                    # Build ordered columns and add placeholders
+                    for prefix in gene_prefixes:
+                         matched = [c for c in df.columns if prefix.lower() in c.lower()]
+
+                         if matched:
+                              ordered_gene_cols.extend(sorted(matched))
+                         else:
+                              df[prefix] = '-'
+                              annotated = f"{prefix}-*"
+                              rename_gene_map[prefix] = annotated
+                              ordered_gene_cols.append(annotated)
+
+                    # Apply renaming
+                    df = df.rename(columns=rename_gene_map)
+
+                    # Reorder columns
+                    final_cols = [id_col, count_col] + ordered_gene_cols
+
+                    # Ensure SeqID is a column (not index)
+                    if id_col not in df.columns:
+                         df = df.reset_index()
+
+                    df = df.reindex(columns=final_cols, fill_value='.')
+
+
+                    # Coverage filter function
+                    def keep_if_100(col):
+                         for val in col:
+                              if val in ['-', '.', None]:
+                                   continue
+                              try:
+                                   values = [float(v) for v in str(val).split(';')]
+                                   if any(v == 100 for v in values):
+                                        return True
+                              except ValueError:
+                                   continue
+                         return False
+
+                    # Drop dfrA3 if no 100% coverage
+                    if 'dfrA3' in df.columns and not keep_if_100(df['dfrA3']):
+                         df = df.drop(columns=['dfrA3'])
+
+                    # Recalculate gene count
+                    gene_cols = [c for c in df.columns if c not in [id_col, count_col]]
+                    df[count_col] = df[gene_cols].apply(
+                         lambda row: sum(v not in ['-', '.'] for v in row),
+                         axis=1
+                    )
+
+                    return df
+
+               AMR_GENE_PREFIXES = ['CTX-M', 'CMY', 'OXA', 'TEM', 'Erm', 'mph', 'dfrA', 'sul', 'QnrS', 'parC', 'parE', 'gyrA']
+
+               ABR_GENE_PREFIXES = ['CTX-M', 'CMY', 'OXA', 'TEM', 'Erm', 'mph', 'dfrA', 'sul', 'QnrS']
+
+               amr_selected = process_amr_like_df(amr_final, gene_prefixes=AMR_GENE_PREFIXES)
+               amr_selected.rename(columns={"Gene_Count":"ABRITAMR_Gene_Count"}, inplace = True)
+               abr_selected = process_amr_like_df(abr_final, ABR_GENE_PREFIXES)
+               abr_selected.rename(columns={"Gene_Count":"ABRICATE_Gene_Count"}, inplace = True)
+
+               print(amr_selected)
+               print(abr_selected)
 
                ######################################################################################
 
@@ -327,13 +452,16 @@ if all_shigella:
                shfinder = pd.read_csv(f"{input.shigfinder}", sep ='\t')
                shfinder = shfinder.rename({'SAMPLE ID': 'SeqID', 'SEROTYPE': 'ShigeiFinder Serotype Prediction'}, axis =1)
                shfinder['SeqID'] = shfinder['SeqID'].astype(str)
-               shfinder = shfinder.iloc[:,[0,4,3,1,2,5,6,7]]
+               shfinder = shfinder.iloc[:,[0,4,3,1,2,5,6,7]] # reordering columns
+               shfinder_for_sum = shfinder
+               shfinder_for_report = shfinder.loc[:,['SeqID', 'ShigeiFinder Serotype Prediction']]
                print(shfinder)
                # reading and formatting shigatyper data
                shtyper = pd.read_csv(f"{input.shigtyper}", sep='\t')
                shtyper = shtyper.rename({'Sample': 'SeqID', 'Prediction' : 'ShigaTyper Prediction'}, axis =1)
                shtyper['SeqID'] = shtyper['SeqID'].astype(str)
-               print(shtyper)
+               shtyper_for_sum = shtyper.loc[:, ['SeqID', 'ShigaTyper Prediction', 'ipaB']]
+               print(shtyper_for_sum)
                # reading, filtering and formatting sonneityping data **if available**
                
                if "mykrobe" in f"{input}":
@@ -343,6 +471,7 @@ if all_shigella:
                     sonnei = sonnei.iloc[:, :-col_to_drop]
                     sonnei = sonnei.rename({'genome':'SeqID', 'species':'MYKROBE_species'}, axis =1)
                     sonnei['SeqID'] = sonnei['SeqID'].astype(str)
+                    sonnei = sonnei.loc[:,['SeqID', 'MYKROBE_species', 'final genotype', 'name']]
                else:
                     sonnei = None
                     # sonnei = pd.DataFrame()
@@ -350,40 +479,68 @@ if all_shigella:
                # print(sonnei)
                # Creating final output file by merge
                sp_st = [sp, mlst]
-               typing_data = [shfinder, shtyper]
-               amr_data = [resistome, amr_final]
-
+               typing_data_report = [shfinder_for_report]
+               typing_data_for_sum = [shfinder_for_sum, shtyper_for_sum]
+               # amr_data = [resistome, amr_selected]
+               amr_data_for_sum = [amr_final, abr_final]
+               amr_report_data = [amr_selected, abr_selected]
                # Only appending mykrobe sonnei file to all_files list above if present
                if sonnei is not None:
-                    typing_data.append(sonnei)
+                    typing_data_report.append(sonnei)
+                    typing_data_for_sum.append(sonnei)
                     print("sonneityping summary added to all_files")
                # if not sonnei.empty:
                #      all_files.append(sonnei)
                #      print("sonneityping summary added to all_files")
                     
                # merging two files first
-               Output_df = pd.merge(seqdata, denovo, on='SeqID', how='inner')
+               Output_report_df = pd.merge(seqdata, denovo, on='SeqID', how='inner')
                
                # Mergining different lists of dataframes one by one to ensure order of result columns in the report summary
                ## 1 Species and MLST df list first
                for i in sp_st:
-                    Output_df = pd.merge(Output_df, i, on='SeqID', how='inner')
+                    Output_report_df = pd.merge(Output_report_df, i, on='SeqID', how='inner')
                ## 2 All typing df list second
-               for i in typing_data:
-                    Output_df = pd.merge(Output_df, i, on='SeqID', how='outer')
+               for i in typing_data_report:
+                    Output_report_df = pd.merge(Output_report_df, i, on='SeqID', how='outer')
                # 3 All amr data df list third
-               for i in amr_data:
-                    Output_df = pd.merge(Output_df, i, on='SeqID', how='inner')
+               for i in amr_report_data:
+                    Output_report_df = pd.merge(Output_report_df, i, on='SeqID', how='inner')
+               # Post merge cleanup to remove x/y suffixes if same genes detected in both abritamr and abricate
+               Output_report_df.columns = Output_report_df.columns.str.replace(r'_[xy]$', '', regex=True)
 
-               final_output_df = Output_df
-
+               final_output_report_df = Output_report_df
+               fail_override = ((final_output_report_df['%2'] > 10) & (~final_output_report_df['#2 Match'].str.contains(r'Shigella|Escherichia', case=False, na=False)))
                # Removing any columns with all NA values
-               final_output_df.dropna(axis=1, how='all', inplace = True)
+               final_output_report_df.dropna(axis=1, how='all', inplace = True)
                # Inserting Genomic QC column to include pass or fail criteria based on QC conditions
-               final_output_df.insert(1, 'Genomic QC', '')
-               final_output_df['Genomic QC']=np.where((final_output_df['Reads']>= 1000000) & (final_output_df['contigs']<= 500) & (final_output_df['AvgQual'] >= 30), 'PASS', 'FAIL' )
-               final_output_df = final_output_df.fillna('-', axis=1)
+               final_output_report_df.insert(1, 'Sample QC', '')
+               final_output_report_df['Sample QC']=np.where((final_output_report_df['Reads']>= 1000000) & (final_output_report_df['contigs']<= 500) & (final_output_report_df['AvgQual'] >= 30) & (~fail_override), 'PASS', 'FAIL' )
+               final_output_report_df = final_output_report_df.fillna('-', axis=1)
                # writing to output file
-               final_output_df.to_csv(f"{output}", sep="\t", header=True, index=False)
+               final_output_report_df.to_csv(f"{output.report}", sep="\t", header=True, index=False)
+               ###
 
+               ### Saving summary file
+               Output_sum_df = pd.merge(seqdata, denovo, on='SeqID', how='inner')
+               for i in sp_st:
+                    Output_sum_df = pd.merge(Output_sum_df, i, on='SeqID', how='inner')
+               ## 2 All typing df list second
+               for i in typing_data_for_sum:
+                    Output_sum_df = pd.merge(Output_sum_df, i, on='SeqID', how='outer')
+               # 3 All amr data df list third
+               for i in amr_data_for_sum:
+                    Output_sum_df = pd.merge(Output_sum_df, i, on='SeqID', how='inner')
+               # Post merge cleanup to remove x/y suffixes if same genes detected in both abritamr and abricate
+               Output_sum_df.columns = Output_sum_df.columns.str.replace(r'_[xy]$', '', regex=True)
 
+               final_output_sum_df = Output_sum_df
+               fail_override = ((final_output_sum_df['%2'] > 10) & (~final_output_sum_df['#2 Match'].str.contains(r'Shigella|Escherichia', case=False, na=False)))
+               # Removing any columns with all NA values
+               final_output_sum_df.dropna(axis=1, how='all', inplace = True)
+               # Inserting Genomic QC column to include pass or fail criteria based on QC conditions
+               final_output_sum_df.insert(1, 'Sample QC', '')
+               final_output_sum_df['Sample QC']=np.where((final_output_sum_df['Reads']>= 1000000) & (final_output_sum_df['contigs']<= 500) & (final_output_sum_df['AvgQual'] >= 30) & (~fail_override), 'PASS', 'FAIL' )
+               final_output_sum_df = final_output_sum_df.fillna('-', axis=1)
+               # writing to output file
+               final_output_sum_df.to_csv(f"{output.summary}", sep="\t", header=True, index=False)
