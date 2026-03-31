@@ -1,3 +1,6 @@
+# version
+TB_extract_version="TB_BPaLM_extract.py: v20250926"
+
 import json
 import argparse
 from pathlib import Path
@@ -44,6 +47,7 @@ def main():
         description="Extract drug resistance of new line drug mutations by gene from JSON report"
     )
     parser.add_argument("input_file", help="Path to input JSON report")
+    parser.add_argument("-v", "--version", action="version", version=TB_extract_version)
     args = parser.parse_args()
 
     input_path = Path(args.input_file)
