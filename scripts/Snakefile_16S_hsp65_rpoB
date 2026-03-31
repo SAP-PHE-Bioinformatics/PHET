@@ -1,0 +1,23 @@
+## Snakefile to execute the shell script for species id analysis using 16S, hsp65 and rpoB genes for NTMs and Nocardia.
+# NTMs exclude M. abscessus and M. intracellulare.
+configfile: "phet.yaml"
+
+# General variables
+MID = config["RunID"]
+# date_today = datetime.datetime.today().strftime('%d/%m/%Y')
+
+
+rule all:
+    input:
+        directory(expand("PHET/16S_hsp65_rpoB/{sample}/", sample=config["16S_hsp65_rpoB"]))
+
+
+rule rpoB_16S_hsp:
+    input:
+        "{sample}"
+    output:
+        directory("PHET/16S_hsp65_rpoB/{sample}/")
+    params:
+        runid = config["RunID"]
+    shell:
+        "bash /phe/tools/PHET/scripts/species_id_16S.sh /scratch/phesiqcal/{params.runid}/{input}" 
