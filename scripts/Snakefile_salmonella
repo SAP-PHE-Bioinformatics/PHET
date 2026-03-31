@@ -1,0 +1,57 @@
+#### modify config files with sample sheets ####
+
+configfile: "phet.yaml"
+
+#### target rules ####
+
+if config["salmonella"]:
+     rule all:
+         input:
+              "PHET/Salmonella/sistr.csv",
+              "PHET/Salmonella/sistr_cgmlst.csv",
+               directory(expand("PHET/Salmonella/SeqSero2/{sample}", sample=config["salmonella"])),
+               expand("PHET/Salmonella/SeqSero2/{sample}/SeqSero_result.tsv", sample=config["salmonella"]),
+               "PHET/Salmonella/SeqSero2_summary.tsv"
+
+
+if config["salmonella"]:
+     rule sistr:
+              input:
+                   expand("filtered_contigs/{sample}.fna", sample=config["salmonella"])
+              output:
+                   all = "PHET/Salmonella/sistr.csv",
+                   cgmlst = "PHET/Salmonella/sistr_cgmlst.csv"
+              conda:
+                   "phetype"
+              shell:
+                   "sistr --qc --cgmlst-profiles {output.cgmlst} -f csv -o {output.all} {input}"
+     
+
+if config["salmonella"]:
+     rule seqsero2:
+              input:
+                   "filtered_contigs/{sample}.fna"
+              output:
+                    outdir = directory("PHET/Salmonella/SeqSero2/{sample}"),
+                    outtsv = "PHET/Salmonella/SeqSero2/{sample}/SeqSero_result.tsv"
+              conda:
+                   "seqsero2"
+              shell:
+                   "SeqSero2_package.py -t 4 -m k -i {input} -d {output.outdir}"
+
+if config["salmonella"]:
+     rule seqsero2_sum:
+               input:
+                    tsvfiles = expand("PHET/Salmonella/SeqSero2/{sample}/SeqSero_result.tsv", sample=config["salmonella"])
+               output:
+                    "PHET/Salmonella/SeqSero2_summary.tsv"
+               run:
+                    import pandas as pd
+                    dfs = []
+                    for file in input.tsvfiles:
+                         df = pd.read_csv(file, sep='\t')
+                         df['Sample name'] = df['Sample name'].str.replace(r'.fna', '')
+                         df = df.rename({'Sample name': 'SeqID'}, axis=1)
+                         dfs.append(df)
+                    summary_table = pd.concat(dfs)
+                    summary_table.to_csv(output[0], sep = '\t', index=False)
