@@ -1,10 +1,14 @@
 #!/bin/sh
-
+#
 source /phe/tools/miniconda3/etc/profile.d/conda.sh
 
 # TYPING TOOLS
 
 # echo "TYPING TOOLS"
+
+# SeqSero - SALMONELLA
+conda activate seqsero2
+SeqSero2_package.py -v | tr " " ","
 
 conda activate phetype
 
